@@ -73,7 +73,6 @@ export type FiltroTipo =
   | 'ativos'
   | 'predinho'
   | 'pendentes'
-  | 'reajuste'
 
 /**
  * Valores padrão para um novo imóvel — sem "id" nem "imovel_id", ambos

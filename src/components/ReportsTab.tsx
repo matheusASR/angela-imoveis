@@ -21,7 +21,7 @@ import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined'
 import type { Locacao } from '../types'
 import {
   MESES_PT,
-  calcularMesContratoAtual,
+  calcularMesContratoEm,
   formatMoeda,
   formatParcelaContrato,
   formatParcelaIptu,
@@ -48,7 +48,7 @@ type LinhaRelatorio = {
   valorPagar: number
 }
 
-function montarLinhas(locacoes: Locacao[], mes: number): LinhaRelatorio[] {
+function montarLinhas(locacoes: Locacao[], ano: number, mes: number): LinhaRelatorio[] {
   const parcela = parcelaIptuParaMes(mes)
   return locacoes.map((l) => ({
     imovel: `${l.local || 'Sem endereço'}${l.numero_ap ? ' - Apto ' + l.numero_ap : ''}`,
@@ -56,7 +56,7 @@ function montarLinhas(locacoes: Locacao[], mes: number): LinhaRelatorio[] {
     telefone: l.telefone_proprietario || '—',
     locatario: l.nome_locatario || '—',
     tempoContrato: formatParcelaContrato(
-      calcularMesContratoAtual(l.data_inicio_contrato, l.meses_contrato),
+      calcularMesContratoEm(l.data_inicio_contrato, l.meses_contrato, ano, mes),
       l.meses_contrato,
     ),
     aluguel: l.valor_aluguel,
@@ -115,7 +115,10 @@ export default function ReportsTab() {
     [locacoesMes, somenteAtivos],
   )
 
-  const linhas = useMemo(() => montarLinhas(base, mesNum || hoje.getMonth() + 1), [base, mesNum])
+  const linhas = useMemo(
+    () => montarLinhas(base, ano || hoje.getFullYear(), mesNum || hoje.getMonth() + 1),
+    [base, ano, mesNum],
+  )
 
   const totais = useMemo(
     () => ({

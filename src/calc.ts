@@ -134,6 +134,53 @@ export function formatParcelaContrato(mes_atual: number, meses_contrato: number)
 }
 
 /**
+ * Quantos meses se passaram entre o início do contrato e uma competência
+ * ("ano"/"mês") específica — como `mesesDesdeInicio`, mas em vez de usar a
+ * data de hoje, usa o mês/ano informado. Usada pelo relatório mensal, para
+ * que "Tempo de contrato" reflita o mês do relatório sendo visualizado (que
+ * pode ser um mês passado), e não sempre o mês atual do calendário.
+ */
+export function mesesDesdeInicioEm(data_inicio_contrato: string, ano: number, mes: number): number | null {
+  if (!data_inicio_contrato) return null
+  const inicio = new Date(data_inicio_contrato)
+  if (isNaN(inicio.getTime())) return null
+  return (ano - inicio.getFullYear()) * 12 + (mes - 1 - inicio.getMonth())
+}
+
+/** Mês atual do contrato numa competência ("ano"/"mês") específica — ver `mesesDesdeInicioEm`. */
+export function calcularMesContratoEm(
+  data_inicio_contrato: string,
+  meses_contrato: number,
+  ano: number,
+  mes: number,
+): number {
+  const meses = mesesDesdeInicioEm(data_inicio_contrato, ano, mes)
+  if (meses === null) return 0
+  const atual = meses + 1
+  const max = meses_contrato > 0 ? meses_contrato : 9999
+  return Math.min(Math.max(atual, 1), max)
+}
+
+/** Data prevista de término do contrato (início + duração em meses). */
+export function dataFimContrato(data_inicio_contrato: string, meses_contrato: number): Date | null {
+  if (!data_inicio_contrato) return null
+  const inicio = new Date(data_inicio_contrato)
+  if (isNaN(inicio.getTime())) return null
+  const fim = new Date(inicio)
+  fim.setMonth(fim.getMonth() + (Number(meses_contrato) || 0))
+  return fim
+}
+
+/** true quando o contrato termina em até 3 meses (ou já terminou). */
+export function contratoPertoDoFim(data_inicio_contrato: string, meses_contrato: number): boolean {
+  const fim = dataFimContrato(data_inicio_contrato, meses_contrato)
+  if (!fim) return false
+  const limite = new Date()
+  limite.setMonth(limite.getMonth() + 3)
+  return fim.getTime() <= limite.getTime()
+}
+
+/**
  * Valor a ser pago ao proprietário:
  * Aluguel + Condomínio + IPTU (parcela do mês) + Benefícios do Inquilino (Extras) + Multa (se houver)
  * - Taxa ADM - Extra do Proprietário

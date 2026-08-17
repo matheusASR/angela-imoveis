@@ -35,7 +35,7 @@ import {
   deleteCliente,
   updateLocacoesByProprietario,
 } from './storage'
-import { calcValorAdm, precisaReajuste, hojeISO } from './calc'
+import { calcValorAdm, precisaReajuste, reajusteJaRevisado, hojeISO } from './calc'
 import { supabase } from './lib/supabaseClient'
 import { useSession } from './hooks/useSession'
 import { appBarShadow } from './theme'
@@ -137,7 +137,20 @@ export default function App() {
     }
 
     if (filtro === 'pendentes') {
-      list = list.filter((l) => !l.data_pagamento_locatario || precisaReajuste(l.data_inicio_contrato))
+      // Reajuste só conta como pendência se ainda não foi revisado, ou se
+      // foi revisado mas os pagamentos do locatário/proprietário daquele
+      // ciclo ainda não foram registrados — uma vez revisado e com ambos os
+      // pagamentos feitos, o caso sai desta aba.
+      list = list.filter((l) => {
+        const reajustePendente =
+          precisaReajuste(l.data_inicio_contrato) &&
+          !(
+            reajusteJaRevisado(l.data_inicio_contrato, l.data_revisao_reajuste) &&
+            l.data_pagamento_locatario &&
+            l.data_pagamento_proprietario
+          )
+        return !l.data_pagamento_locatario || reajustePendente
+      })
     }
 
     if (filtro === 'predinho') {
@@ -146,10 +159,6 @@ export default function App() {
 
     if (filtro === 'ativos') {
       list = list.filter((l) => l.ativo)
-    }
-
-    if (filtro === 'reajuste') {
-      list = list.filter((l) => precisaReajuste(l.data_inicio_contrato))
     }
 
     return list

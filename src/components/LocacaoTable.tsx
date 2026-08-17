@@ -24,6 +24,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew'
 import HomeWorkOutlinedIcon from '@mui/icons-material/HomeWorkOutlined'
 import type { Locacao } from '../types'
 import {
+  contratoPertoDoFim,
   formatData,
   formatMesAno,
   formatMoeda,
@@ -32,7 +33,7 @@ import {
   valorAPagarProprietario,
   valorParcelaIptu,
 } from '../calc'
-import { brick, moss, amber, inkSecondary } from '../theme'
+import { brick, moss, amber, rose, inkSecondary } from '../theme'
 
 /**
  * Célula de valor monetário editável in-line. Tem fundo e borda sutis
@@ -141,34 +142,48 @@ export default function LocacaoTable({
     )
   }
 
+  const algumPertoDoFim = locacoes.some(
+    (l) => l.ativo && contratoPertoDoFim(l.data_inicio_contrato, l.meses_contrato),
+  )
+
   return (
-    <TableContainer component={Paper} variant="outlined">
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell>Imóvel</TableCell>
-            <TableCell>Locatário</TableCell>
-            <TableCell>Proprietário</TableCell>
-            <TableCell>Mês/Ano</TableCell>
-            <TableCell align="right">Aluguel</TableCell>
-            <TableCell align="right">Condomínio</TableCell>
-            <TableCell align="right">IPTU (mensal)</TableCell>
-            <TableCell align="right">Extras inquilino</TableCell>
-            <TableCell align="right">Multa</TableCell>
-            <TableCell align="right">Taxa ADM</TableCell>
-            <TableCell align="right">Extras proprietário</TableCell>
-            <TableCell align="right">A pagar ao proprietário</TableCell>
-            <TableCell>Pagamentos</TableCell>
-            <TableCell>Situação</TableCell>
-            <TableCell align="right"></TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
+    <Stack spacing={1}>
+      {algumPertoDoFim && (
+        <Stack direction="row" spacing={1} alignItems="center">
+          <Box sx={{ width: 12, height: 12, borderRadius: 0.75, bgcolor: rose, opacity: 0.55, flexShrink: 0 }} />
+          <Typography variant="caption" color="text.secondary">
+            Contratos com 3 meses ou menos para o fim
+          </Typography>
+        </Stack>
+      )}
+      <TableContainer component={Paper} variant="outlined">
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell>Imóvel</TableCell>
+              <TableCell>Locatário</TableCell>
+              <TableCell>Proprietário</TableCell>
+              <TableCell>Mês/Ano</TableCell>
+              <TableCell align="right">Aluguel</TableCell>
+              <TableCell align="right">Condomínio</TableCell>
+              <TableCell align="right">IPTU (mensal)</TableCell>
+              <TableCell align="right">Extras inquilino</TableCell>
+              <TableCell align="right">Multa</TableCell>
+              <TableCell align="right">Taxa ADM</TableCell>
+              <TableCell align="right">Extras proprietário</TableCell>
+              <TableCell align="right">A pagar ao proprietário</TableCell>
+              <TableCell>Pagamentos</TableCell>
+              <TableCell>Situação</TableCell>
+              <TableCell align="right"></TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
           {locacoes.map((l) => {
             const reajuste = precisaReajuste(l.data_inicio_contrato)
             const revisado = reajusteJaRevisado(l.data_inicio_contrato, l.data_revisao_reajuste)
             const locatarioPagou = !!l.data_pagamento_locatario
             const proprietarioPago = !!l.data_pagamento_proprietario
+            const pertoDoFim = l.ativo && contratoPertoDoFim(l.data_inicio_contrato, l.meses_contrato)
             const abrirCellSx = {
               cursor: 'pointer',
               transition: 'background-color 0.12s ease',
@@ -179,7 +194,11 @@ export default function LocacaoTable({
                 key={l.id}
                 hover
                 sx={{
-                  backgroundColor: l.predinho === 1 ? 'rgba(166,71,43,0.045)' : undefined,
+                  backgroundColor: pertoDoFim
+                    ? 'rgba(192,57,43,0.06)'
+                    : l.predinho === 1
+                      ? 'rgba(166,71,43,0.045)'
+                      : undefined,
                   transition: 'background-color 0.12s ease',
                   '&:last-child td': { borderBottom: 0 },
                 }}
@@ -406,8 +425,9 @@ export default function LocacaoTable({
               </TableRow>
             )
           })}
-        </TableBody>
-      </Table>
-    </TableContainer>
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Stack>
   )
 }

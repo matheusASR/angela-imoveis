@@ -50,7 +50,6 @@ export default function AppToolbar({
         <ToggleButton value="todos">Todos</ToggleButton>
         <ToggleButton value="pendentes">Precisam de atenção</ToggleButton>
         <ToggleButton value="predinho">PREDINHO</ToggleButton>
-        <ToggleButton value="reajuste">Reajuste pendente</ToggleButton>
       </ToggleButtonGroup>
 
       <Stack sx={{ flex: 1 }} />

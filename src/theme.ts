@@ -17,6 +17,7 @@ export const brick = '#A6472B'
 export const brickDark = '#833723'
 export const moss = '#2F6E58'
 export const amber = '#B8862E'
+export const rose = '#C0392B'
 
 const cardShadow = '0 1px 1px rgba(15,15,20,0.03), 0 8px 24px -12px rgba(15,15,20,0.12)'
 const cardShadowHover = '0 1px 1px rgba(15,15,20,0.04), 0 16px 32px -14px rgba(15,15,20,0.16)'
