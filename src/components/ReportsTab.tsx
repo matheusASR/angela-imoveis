@@ -303,14 +303,14 @@ export default function ReportsTab() {
               label="Somente contratos ativos"
             />
             <Box sx={{ flex: 1 }} />
-            <Button
+            {/* <Button
               variant="outlined"
               startIcon={<FileDownloadOutlinedIcon />}
               onClick={handleExportarHtml}
               disabled={carregando || linhas.length === 0}
             >
               Exportar HTML
-            </Button>
+            </Button> */}
             <Button
               variant="contained"
               startIcon={<PictureAsPdfOutlinedIcon />}
