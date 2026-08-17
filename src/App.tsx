@@ -26,6 +26,7 @@ import type { Cliente, FiltroTipo, Locacao } from './types'
 import { novaLocacaoPadrao } from './types'
 import {
   fetchAppData,
+  avancarMesReferencia,
   insertLocacao,
   updateLocacao,
   deleteLocacao,
@@ -34,7 +35,7 @@ import {
   deleteCliente,
   updateLocacoesByProprietario,
 } from './storage'
-import { aplicarReferenciaMensal, calcValorAdm, precisaReajuste, hojeISO } from './calc'
+import { calcValorAdm, precisaReajuste, hojeISO } from './calc'
 import { supabase } from './lib/supabaseClient'
 import { useSession } from './hooks/useSession'
 import { appBarShadow } from './theme'
@@ -79,30 +80,23 @@ export default function App() {
   const showErro = (e: unknown) =>
     showSnack(e instanceof Error ? e.message : 'Ocorreu um erro ao falar com o servidor.', 'error')
 
-  // Carrega os dados do Supabase assim que há sessão. Ao carregar, aplica a
-  // virada de mês pendente: qualquer locação cuja competência não seja mais
-  // a atual tem os pagamentos do ciclo anterior zerados (e persiste a
-  // mudança de volta no banco).
+  // Carrega os dados do Supabase assim que há sessão. Antes de carregar,
+  // roda a virada de mês pendente: para cada imóvel ativo cuja linha mais
+  // recente não seja do mês atual, insere uma linha nova por mês faltante
+  // (preenchendo de uma vez qualquer mês pulado), preservando as linhas
+  // antigas como histórico. Só depois busca os dados do mês atual para
+  // exibir na aba Imóveis.
   useEffect(() => {
     if (!session) return
     let cancelado = false
     setCarregando(true)
-    fetchAppData()
-      .then(async (data) => {
+    avancarMesReferencia()
+      .catch(showErro)
+      .then(() => fetchAppData())
+      .then((data) => {
         if (cancelado) return
-        const atualizadas = data.locacoes.map(aplicarReferenciaMensal)
-        setLocacoes(atualizadas)
+        setLocacoes(data.locacoes)
         setClientes(data.clientes)
-        const mudaram = atualizadas.filter((l, i) => l !== data.locacoes[i])
-        await Promise.all(
-          mudaram.map((l) =>
-            updateLocacao(l.id, {
-              mes_referencia: l.mes_referencia,
-              data_pagamento_locatario: l.data_pagamento_locatario,
-              data_pagamento_proprietario: l.data_pagamento_proprietario,
-            }),
-          ),
-        )
       })
       .catch(showErro)
       .finally(() => {
@@ -114,27 +108,16 @@ export default function App() {
   }, [session])
 
   // Enquanto o app fica aberto, verifica periodicamente se o mês virou (ex.:
-  // sessão aberta durante a virada da meia-noite de fim de mês) para zerar
-  // os pagamentos sem depender de um novo carregamento da página.
+  // sessão aberta durante a virada da meia-noite de fim de mês), sem
+  // depender de um novo carregamento da página.
   useEffect(() => {
     if (!session) return
     const id = setInterval(() => {
-      setLocacoes((prev) => {
-        const atualizadas = prev.map(aplicarReferenciaMensal)
-        const mudaram = atualizadas.filter((l, i) => l !== prev[i])
-        if (mudaram.length > 0) {
-          Promise.all(
-            mudaram.map((l) =>
-              updateLocacao(l.id, {
-                mes_referencia: l.mes_referencia,
-                data_pagamento_locatario: l.data_pagamento_locatario,
-                data_pagamento_proprietario: l.data_pagamento_proprietario,
-              }),
-            ),
-          ).catch(showErro)
-        }
-        return atualizadas
-      })
+      avancarMesReferencia()
+        .then((mudou) => {
+          if (mudou) return fetchAppData().then((data) => setLocacoes(data.locacoes))
+        })
+        .catch(showErro)
     }, 30 * 60 * 1000)
     return () => clearInterval(id)
   }, [session])
@@ -437,7 +420,7 @@ export default function App() {
               </Stack>
             )}
 
-            {aba === 'relatorios' && <ReportsTab locacoes={locacoes} />}
+            {aba === 'relatorios' && <ReportsTab />}
 
             {aba === 'clientes' && (
               <ClientesTab

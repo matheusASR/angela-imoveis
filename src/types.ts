@@ -42,8 +42,15 @@ export interface Locacao {
   ativo: boolean
   /** Referência ao cliente (proprietário) cadastrado na aba Clientes. */
   id_proprietario: number | null
-  /** Competência (mês/ano, "AAAA-MM") a que os valores e pagamentos atuais se referem. */
+  /** Competência (mês/ano, "AAAA-MM") a que os valores e pagamentos desta linha se referem. */
   mes_referencia: string
+  /**
+   * Chave estável que agrupa todas as linhas mensais do mesmo imóvel ao
+   * longo do tempo — diferente de "id", que identifica só esta linha (um
+   * mês específico). Atribuída pelo banco (sequence) para imóveis novos;
+   * copiada da linha anterior quando a virada de mês insere um novo mês.
+   */
+  imovel_id: number
 }
 
 export interface Cliente {
@@ -65,8 +72,11 @@ export type FiltroTipo =
   | 'pendentes'
   | 'reajuste'
 
-/** Valores padrão para um novo imóvel — sem "id", que é atribuído pelo banco na inserção. */
-export const novaLocacaoPadrao = (): Omit<Locacao, 'id'> => ({
+/**
+ * Valores padrão para um novo imóvel — sem "id" nem "imovel_id", ambos
+ * atribuídos pelo banco na inserção (ver schema.sql).
+ */
+export const novaLocacaoPadrao = (): Omit<Locacao, 'id' | 'imovel_id'> => ({
   local: '',
   numero_ap: '',
   meio_pagamento: '',

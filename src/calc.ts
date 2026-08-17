@@ -20,21 +20,28 @@ export function formatMesAno(mesAno: string): string {
 }
 
 /**
- * Toda vez que o mês vigente muda em relação à competência (mes_referencia)
- * registrada na locação, os pagamentos do ciclo anterior deixam de ser
- * válidos: as datas de pagamento do locatário e do proprietário são zeradas
- * e a competência é avançada para o mês atual. Locações já na competência
- * atual não sofrem alteração.
+ * Lista de competências ("AAAA-MM") entre `ultimoMes` (exclusivo) e
+ * `mesAtual` (inclusivo), em ordem cronológica. Usada pela virada de mês
+ * para descobrir quantas linhas mensais faltam inserir para um imóvel —
+ * se ninguém abriu o app por alguns meses, preenche todos de uma vez em
+ * vez de pular direto para o mês atual.
+ *
+ * Ex.: mesesFaltantes("2026-05", "2026-08") → ["2026-06", "2026-07", "2026-08"]
  */
-export function aplicarReferenciaMensal(l: Locacao): Locacao {
-  const atual = mesAtualISO()
-  if (l.mes_referencia === atual) return l
-  return {
-    ...l,
-    mes_referencia: atual,
-    data_pagamento_locatario: '',
-    data_pagamento_proprietario: '',
+export function mesesFaltantes(ultimoMes: string, mesAtual: string = mesAtualISO()): string[] {
+  const [anoIni, mesIni] = ultimoMes.split('-').map(Number)
+  if (!anoIni || !mesIni) return []
+  const faltantes: string[] = []
+  let cursor = new Date(Date.UTC(anoIni, mesIni - 1, 1))
+  const limite = (() => {
+    const [ano, mes] = mesAtual.split('-').map(Number)
+    return new Date(Date.UTC(ano, mes - 1, 1))
+  })()
+  while (cursor < limite) {
+    cursor = new Date(Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth() + 1, 1))
+    faltantes.push(`${cursor.getUTCFullYear()}-${String(cursor.getUTCMonth() + 1).padStart(2, '0')}`)
   }
+  return faltantes
 }
 
 /** Calcula valor_adm conforme a regra do PREDINHO (7%) ou demais imóveis (8%). */

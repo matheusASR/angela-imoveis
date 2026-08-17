@@ -65,6 +65,34 @@ create table if not exists public.locacoes (
 
 create index if not exists locacoes_id_proprietario_idx on public.locacoes (id_proprietario);
 
+-- Histórico mensal: "id" identifica uma linha (um registro de um mês
+-- específico de um imóvel); "imovel_id" é a chave estável que agrupa todas
+-- as linhas mensais do mesmo imóvel ao longo do tempo. Toda virada de mês
+-- insere uma linha nova com o mesmo imovel_id em vez de sobrescrever a
+-- anterior — por isso o histórico de meses passados fica preservado.
+alter table public.locacoes add column if not exists imovel_id integer;
+update public.locacoes set imovel_id = id where imovel_id is null;
+alter table public.locacoes alter column imovel_id set not null;
+
+-- A sequence garante que todo imóvel NOVO (criado pelo app sem informar
+-- imovel_id) ganhe uma chave própria; a virada de mês, ao inserir a linha
+-- do mês novo, informa explicitamente o imovel_id já existente do imóvel,
+-- então não consome a sequence nesse caso.
+create sequence if not exists public.imovel_id_seq;
+select setval(
+  'public.imovel_id_seq',
+  greatest((select coalesce(max(imovel_id), 0) from public.locacoes), 1)
+);
+alter table public.locacoes alter column imovel_id set default nextval('public.imovel_id_seq');
+
+-- Nunca pode haver duas linhas do mesmo imóvel para o mesmo mês de
+-- referência — é essa constraint que impede duplicidade na virada de mês.
+alter table public.locacoes drop constraint if exists locacoes_imovel_mes_unique;
+alter table public.locacoes
+  add constraint locacoes_imovel_mes_unique unique (imovel_id, mes_referencia);
+
+create index if not exists locacoes_imovel_id_idx on public.locacoes (imovel_id);
+
 alter table public.clientes enable row level security;
 alter table public.locacoes enable row level security;
 

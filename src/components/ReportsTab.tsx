@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Paper,
   Stack,
@@ -14,6 +14,7 @@ import {
   TableCell,
   TableContainer,
   Box,
+  CircularProgress,
 } from '@mui/material'
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined'
 import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined'
@@ -27,6 +28,7 @@ import {
   parcelaIptuParaMes,
   valorAPagarProprietario,
 } from '../calc'
+import { fetchLocacoesPorMes } from '../storage'
 
 // Colunas essenciais para o relatório mensal (fins de conferência e repasse).
 type LinhaRelatorio = {
@@ -73,7 +75,7 @@ function escapeHtml(v: string): string {
   return v.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
-export default function ReportsTab({ locacoes }: { locacoes: Locacao[] }) {
+export default function ReportsTab() {
   const hoje = new Date()
   const [mesAno, setMesAno] = useState(
     `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`,
@@ -83,9 +85,34 @@ export default function ReportsTab({ locacoes }: { locacoes: Locacao[] }) {
   const [ano, mesNum] = mesAno.split('-').map(Number)
   const nomeMes = MESES_PT[(mesNum || 1) - 1] ?? ''
 
+  // Cada mês do relatório busca sua própria linha histórica (mes_referencia)
+  // direto no Supabase — os dados de um mês passado não vêm mais dos
+  // valores "ao vivo" do estado global do app, e sim da linha gravada
+  // naquele mês pela virada mensal.
+  const [locacoesMes, setLocacoesMes] = useState<Locacao[]>([])
+  const [carregando, setCarregando] = useState(true)
+
+  useEffect(() => {
+    let cancelado = false
+    setCarregando(true)
+    fetchLocacoesPorMes(mesAno)
+      .then((data) => {
+        if (!cancelado) setLocacoesMes(data)
+      })
+      .catch(() => {
+        if (!cancelado) setLocacoesMes([])
+      })
+      .finally(() => {
+        if (!cancelado) setCarregando(false)
+      })
+    return () => {
+      cancelado = true
+    }
+  }, [mesAno])
+
   const base = useMemo(
-    () => (somenteAtivos ? locacoes.filter((l) => l.ativo) : locacoes),
-    [locacoes, somenteAtivos],
+    () => (somenteAtivos ? locacoesMes.filter((l) => l.ativo) : locacoesMes),
+    [locacoesMes, somenteAtivos],
   )
 
   const linhas = useMemo(() => montarLinhas(base, mesNum || hoje.getMonth() + 1), [base, mesNum])
@@ -280,7 +307,7 @@ export default function ReportsTab({ locacoes }: { locacoes: Locacao[] }) {
               variant="outlined"
               startIcon={<FileDownloadOutlinedIcon />}
               onClick={handleExportarHtml}
-              disabled={linhas.length === 0}
+              disabled={carregando || linhas.length === 0}
             >
               Exportar HTML
             </Button>
@@ -288,14 +315,15 @@ export default function ReportsTab({ locacoes }: { locacoes: Locacao[] }) {
               variant="contained"
               startIcon={<PictureAsPdfOutlinedIcon />}
               onClick={handleExportarPdf}
-              disabled={linhas.length === 0}
+              disabled={carregando || linhas.length === 0}
             >
               Exportar PDF
             </Button>
           </Stack>
           <Typography variant="caption" color="text.secondary">
-            A parcela de IPTU exibida é a referente ao mês selecionado ({nomeMes}/{ano}); os demais
-            valores refletem os dados cadastrados atualmente para cada imóvel.
+            Os valores exibidos são os registrados naquela competência ({nomeMes}/{ano}) — a foto do
+            imóvel gravada quando o mês virou, não os dados atuais. A parcela de IPTU também é a
+            referente a esse mês.
           </Typography>
         </Stack>
       </Paper>
@@ -320,10 +348,18 @@ export default function ReportsTab({ locacoes }: { locacoes: Locacao[] }) {
             </TableRow>
           </TableHead>
           <TableBody>
-            {linhas.length === 0 ? (
+            {carregando ? (
               <TableRow>
                 <TableCell colSpan={13} align="center" sx={{ py: 4 }}>
-                  <Typography color="text.secondary">Nenhum imóvel para este filtro.</Typography>
+                  <CircularProgress size={22} />
+                </TableCell>
+              </TableRow>
+            ) : linhas.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={13} align="center" sx={{ py: 4 }}>
+                  <Typography color="text.secondary">
+                    Nenhum registro para {nomeMes}/{ano} com este filtro.
+                  </Typography>
                 </TableCell>
               </TableRow>
             ) : (
