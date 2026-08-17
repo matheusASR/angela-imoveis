@@ -37,6 +37,7 @@ import {
 } from './storage'
 import { aplicarReferenciaMensal, calcValorAdm, precisaReajuste, hojeISO } from './calc'
 import { supabase } from './lib/supabaseClient'
+import { appBarShadow } from './theme'
 
 import LoginScreen from './components/LoginScreen'
 import HomeSummary from './components/HomeSummary'
@@ -353,7 +354,7 @@ export default function App() {
         position="static"
         elevation={0}
         color="transparent"
-        sx={{ borderBottom: '2px solid', borderColor: 'text.primary', bgcolor: 'background.paper' }}
+        sx={{ bgcolor: 'background.paper', boxShadow: appBarShadow }}
       >
         <MuiToolbar sx={{ py: 0.5, minHeight: '48px !important' }}>
           <HomeWorkOutlinedIcon sx={{ mr: 1.5, color: 'primary.main', fontSize: '1.75rem' }} />
@@ -375,14 +376,10 @@ export default function App() {
       ) : (
         <Container maxWidth={false} sx={{ py: 2, px: { xs: 1.5, sm: 2.5, md: 3.5 } }}>
           <Stack spacing={1.5}>
-            <Tabs
-              value={aba}
-              onChange={(_, v) => setAba(v)}
-              sx={{ borderBottom: '1px solid', borderColor: 'divider', minHeight: 40 }}
-            >
-              <Tab value="imoveis" label="Imóveis" sx={{ minHeight: 40, py: 0.5 }} />
-              <Tab value="relatorios" label="Relatórios" sx={{ minHeight: 40, py: 0.5 }} />
-              <Tab value="clientes" label="Clientes" sx={{ minHeight: 40, py: 0.5 }} />
+            <Tabs value={aba} onChange={(_, v) => setAba(v)}>
+              <Tab value="imoveis" label="Imóveis" />
+              <Tab value="relatorios" label="Relatórios" />
+              <Tab value="clientes" label="Clientes" />
             </Tabs>
 
             {aba === 'imoveis' && (
