@@ -175,7 +175,7 @@ export default function LocacaoDialog({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle sx={{ fontFamily: '"Fraunces", serif', fontSize: '1.5rem' }}>{title}</DialogTitle>
+      <DialogTitle>{title}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2.5}>
           {alertaReajuste && !revisado && (

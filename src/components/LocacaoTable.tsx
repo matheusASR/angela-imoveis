@@ -21,6 +21,7 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew'
+import HomeWorkOutlinedIcon from '@mui/icons-material/HomeWorkOutlined'
 import type { Locacao } from '../types'
 import {
   formatData,
@@ -31,14 +32,14 @@ import {
   valorAPagarProprietario,
   valorParcelaIptu,
 } from '../calc'
-import { brick, moss, amber } from '../theme'
+import { brick, moss, amber, inkSecondary } from '../theme'
 
 /**
- * Célula de valor monetário editável in-line. Tem fundo e borda tracejada
+ * Célula de valor monetário editável in-line. Tem fundo e borda sutis
  * permanentes (mesmo fora de foco) para deixar claro, à primeira vista, que
  * é um campo editável e não apenas um texto informativo. Ao clicar, vira um
- * input numérico normal. `onCommit` só é chamado quando o valor realmente
- * muda.
+ * input numérico normal com destaque de foco. `onCommit` só é chamado
+ * quando o valor realmente muda.
  */
 function EditableMoneyCell({ value, onCommit }: { value: number; onCommit: (v: number) => void }) {
   const [editando, setEditando] = useState(false)
@@ -58,7 +59,7 @@ function EditableMoneyCell({ value, onCommit }: { value: number; onCommit: (v: n
   return (
     <TextField
       size="small"
-      variant={editando ? 'outlined' : 'standard'}
+      variant="standard"
       type={editando ? 'number' : 'text'}
       value={editando ? texto : formatMoeda(value)}
       onFocus={(e) => {
@@ -79,12 +80,15 @@ function EditableMoneyCell({ value, onCommit }: { value: number; onCommit: (v: n
         sx: {
           fontFamily: '"IBM Plex Mono", monospace',
           fontSize: '0.85rem',
-          bgcolor: editando ? 'background.paper' : 'rgba(47,110,88,0.07)',
-          borderRadius: 1,
+          bgcolor: editando ? '#FAFAFB' : 'transparent',
+          borderRadius: 1.5,
           px: 0.75,
-          border: '1px dashed',
-          borderColor: editando ? 'secondary.main' : 'rgba(47,110,88,0.35)',
-          '&:hover': { borderColor: 'secondary.main', bgcolor: 'rgba(47,110,88,0.12)' },
+          py: 0.25,
+          border: '1px solid',
+          borderColor: editando ? 'primary.main' : 'transparent',
+          boxShadow: editando ? '0 0 0 3px rgba(166,71,43,0.12)' : 'none',
+          transition: 'background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease',
+          '&:hover': { borderColor: editando ? 'primary.main' : '#D9D9DE', bgcolor: editando ? '#FAFAFB' : '#FAFAFB' },
         },
       }}
       sx={{ minWidth: 100 }}
@@ -111,9 +115,27 @@ export default function LocacaoTable({
 }) {
   if (locacoes.length === 0) {
     return (
-      <Paper variant="outlined" sx={{ p: 6, textAlign: 'center' }}>
-        <Typography sx={{ fontSize: '1.1rem' }} color="text.secondary">
-          Nenhum imóvel encontrado.
+      <Paper
+        variant="outlined"
+        sx={{ p: 7, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.25 }}
+      >
+        <Box
+          sx={{
+            width: 52,
+            height: 52,
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: '#FAFAFB',
+            color: inkSecondary,
+          }}
+        >
+          <HomeWorkOutlinedIcon />
+        </Box>
+        <Typography sx={{ fontSize: '1rem', fontWeight: 600 }}>Nenhum imóvel encontrado</Typography>
+        <Typography variant="body2" color="text.secondary">
+          Ajuste a busca ou os filtros, ou adicione um novo imóvel.
         </Typography>
       </Paper>
     )
@@ -149,23 +171,21 @@ export default function LocacaoTable({
             const proprietarioPago = !!l.data_pagamento_proprietario
             const abrirCellSx = {
               cursor: 'pointer',
-              '&:hover': { bgcolor: 'rgba(30,42,36,0.05)' },
+              transition: 'background-color 0.12s ease',
+              '&:hover': { bgcolor: 'rgba(166,71,43,0.045)' },
             }
             return (
               <TableRow
                 key={l.id}
                 hover
                 sx={{
-                  backgroundColor: l.predinho === 1 ? 'rgba(166,71,43,0.05)' : undefined,
-                  '& td': { borderBottom: '2px solid', borderColor: 'divider' },
-                  '&:nth-of-type(odd) td': {
-                    backgroundColor: l.predinho === 1 ? undefined : 'rgba(30,42,36,0.02)',
-                  },
+                  backgroundColor: l.predinho === 1 ? 'rgba(166,71,43,0.045)' : undefined,
+                  transition: 'background-color 0.12s ease',
                   '&:last-child td': { borderBottom: 0 },
                 }}
               >
                 <Tooltip title="Clique para ver detalhes do imóvel" placement="top-start" enterDelay={600}>
-                  <TableCell sx={{ py: 0.75, ...abrirCellSx }} onClick={() => onOpen(l)}>
+                  <TableCell sx={{ py: 1.25, ...abrirCellSx }} onClick={() => onOpen(l)}>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <Box>
                         <Typography

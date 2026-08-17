@@ -99,9 +99,7 @@ function NovoClienteDialog({
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
-      <DialogTitle sx={{ fontFamily: '"Fraunces", serif', fontSize: '1.5rem' }}>
-        Adicionar cliente
-      </DialogTitle>
+      <DialogTitle>Adicionar cliente</DialogTitle>
       <DialogContent>
         <Stack spacing={2.5} sx={{ pt: 0.5 }}>
           <TextField

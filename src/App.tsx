@@ -14,8 +14,6 @@ import {
   DialogContent,
   DialogActions,
   Button,
-  Tabs,
-  Tab,
   IconButton,
   Tooltip,
   CircularProgress,
@@ -47,6 +45,7 @@ import LocacaoDialog from './components/LocacaoDialog'
 import NovoImovelDialog, { type NovoImovelValues } from './components/NovoImovelDialog'
 import ReportsTab from './components/ReportsTab'
 import ClientesTab from './components/ClientesTab'
+import SegmentedTabs from './components/SegmentedTabs'
 
 type Aba = 'imoveis' | 'relatorios' | 'clientes'
 
@@ -339,7 +338,7 @@ export default function App() {
   if (session === undefined) {
     return (
       <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <CircularProgress />
+        <CircularProgress size={28} />
       </Box>
     )
   }
@@ -356,11 +355,33 @@ export default function App() {
         color="transparent"
         sx={{ bgcolor: 'background.paper', boxShadow: appBarShadow }}
       >
-        <MuiToolbar sx={{ py: 0.5, minHeight: '48px !important' }}>
-          <HomeWorkOutlinedIcon sx={{ mr: 1.5, color: 'primary.main', fontSize: '1.75rem' }} />
-          <Typography variant="h6" sx={{ fontSize: '1.4rem', flex: 1 }}>
-            Angela Imóveis
-          </Typography>
+        <MuiToolbar sx={{ py: 1, minHeight: '60px !important' }}>
+          <Stack direction="row" spacing={1.25} alignItems="center" sx={{ flex: 1 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 36,
+                height: 36,
+                borderRadius: 2.5,
+                bgcolor: 'primary.main',
+                color: '#fff',
+              }}
+            >
+              <HomeWorkOutlinedIcon sx={{ fontSize: '1.3rem' }} />
+            </Box>
+            <Typography
+              sx={{
+                fontFamily: '"Fraunces", serif',
+                fontWeight: 600,
+                fontSize: '1.3rem',
+                letterSpacing: '-0.01em',
+              }}
+            >
+              Angela Imóveis
+            </Typography>
+          </Stack>
           <Tooltip title={`Sair (${session.user.email})`}>
             <IconButton onClick={handleSignOut} size="small">
               <LogoutOutlinedIcon fontSize="small" />
@@ -370,20 +391,35 @@ export default function App() {
       </AppBar>
 
       {carregando ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-          <CircularProgress />
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 1.5,
+            py: 10,
+          }}
+        >
+          <CircularProgress size={28} />
+          <Typography color="text.secondary" variant="body2">
+            Carregando seus dados…
+          </Typography>
         </Box>
       ) : (
-        <Container maxWidth={false} sx={{ py: 2, px: { xs: 1.5, sm: 2.5, md: 3.5 } }}>
-          <Stack spacing={1.5}>
-            <Tabs value={aba} onChange={(_, v) => setAba(v)}>
-              <Tab value="imoveis" label="Imóveis" />
-              <Tab value="relatorios" label="Relatórios" />
-              <Tab value="clientes" label="Clientes" />
-            </Tabs>
+        <Container maxWidth={false} sx={{ py: { xs: 2.5, md: 3.5 }, px: { xs: 2, sm: 3, md: 4.5 } }}>
+          <Stack spacing={3}>
+            <SegmentedTabs
+              value={aba}
+              onChange={setAba}
+              options={[
+                { value: 'imoveis', label: 'Imóveis' },
+                { value: 'relatorios', label: 'Relatórios' },
+                { value: 'clientes', label: 'Clientes' },
+              ]}
+            />
 
             {aba === 'imoveis' && (
-              <Stack spacing={1.25}>
+              <Stack spacing={2}>
                 <HomeSummary locacoes={locacoes} />
 
                 <AppToolbar

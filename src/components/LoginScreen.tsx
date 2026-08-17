@@ -39,10 +39,31 @@ export default function LoginScreen() {
         p: 2,
       }}
     >
-      <Paper variant="outlined" sx={{ p: 4, maxWidth: 380, width: '100%' }}>
-        <Stack spacing={2.5} alignItems="center" sx={{ mb: 1 }}>
-          <HomeWorkOutlinedIcon sx={{ fontSize: '2.5rem', color: 'primary.main' }} />
-          <Typography variant="h6" sx={{ fontSize: '1.4rem', textAlign: 'center' }}>
+      <Paper variant="outlined" sx={{ p: 4.5, maxWidth: 380, width: '100%' }}>
+        <Stack spacing={2} alignItems="center" sx={{ mb: 3 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 48,
+              height: 48,
+              borderRadius: 3,
+              bgcolor: 'primary.main',
+              color: '#fff',
+            }}
+          >
+            <HomeWorkOutlinedIcon sx={{ fontSize: '1.5rem' }} />
+          </Box>
+          <Typography
+            sx={{
+              fontFamily: '"Fraunces", serif',
+              fontWeight: 600,
+              fontSize: '1.4rem',
+              letterSpacing: '-0.01em',
+              textAlign: 'center',
+            }}
+          >
             Angela Imóveis
           </Typography>
         </Stack>

@@ -24,44 +24,46 @@ export default function AppToolbar({
   onNovo: () => void
 }) {
   return (
-    <Stack spacing={1}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25} alignItems={{ sm: 'center' }}>
-        <TextField
-          size="small"
-          placeholder="Buscar por nome ou endereço…"
-          value={query}
-          onChange={(e) => onQueryChange(e.target.value)}
-          sx={{ flex: 1, minWidth: 240, bgcolor: 'background.paper' }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
-        />
-        <Button
-          size="medium"
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={onNovo}
-          sx={{ whiteSpace: 'nowrap' }}
-        >
-          Adicionar imóvel
-        </Button>
-      </Stack>
+    <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} alignItems={{ md: 'center' }}>
+      <TextField
+        size="small"
+        placeholder="Buscar por nome, endereço ou apartamento…"
+        value={query}
+        onChange={(e) => onQueryChange(e.target.value)}
+        sx={{ flex: '0 1 340px', minWidth: 240 }}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon sx={{ fontSize: '1.15rem', color: 'text.secondary' }} />
+            </InputAdornment>
+          ),
+        }}
+      />
 
       <ToggleButtonGroup
         size="small"
         exclusive
         value={filtro}
         onChange={(_, v) => v && onFiltroChange(v)}
+        sx={{ flexWrap: 'wrap' }}
       >
         <ToggleButton value="todos">Todos</ToggleButton>
         <ToggleButton value="pendentes">Precisam de atenção</ToggleButton>
         <ToggleButton value="predinho">PREDINHO</ToggleButton>
         <ToggleButton value="reajuste">Reajuste pendente</ToggleButton>
       </ToggleButtonGroup>
+
+      <Stack sx={{ flex: 1 }} />
+
+      <Button
+        size="medium"
+        variant="contained"
+        startIcon={<AddIcon />}
+        onClick={onNovo}
+        sx={{ whiteSpace: 'nowrap' }}
+      >
+        Adicionar imóvel
+      </Button>
     </Stack>
   )
 }

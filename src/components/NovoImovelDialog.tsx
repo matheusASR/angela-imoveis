@@ -63,9 +63,7 @@ export default function NovoImovelDialog({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle sx={{ fontFamily: '"Fraunces", serif', fontSize: '1.5rem' }}>
-        Adicionar imóvel
-      </DialogTitle>
+      <DialogTitle>Adicionar imóvel</DialogTitle>
       <DialogContent>
         <Typography sx={{ mb: 2.5, color: 'text.secondary' }}>
           Preencha só o básico agora. Os outros dados (aluguel, contrato, banco etc.) você
