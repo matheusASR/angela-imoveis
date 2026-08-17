@@ -1,0 +1,6 @@
+/* Zoom inicial reduzido para que a tabela de imóveis, com muitas colunas,
+   caiba por inteiro (ou o mais próximo disso) sem scroll horizontal na
+   maioria das telas. Equivale a diminuir o zoom do navegador. */
+html {
+  zoom: 0.85;
+}
