@@ -1,4 +1,4 @@
-import { Paper, Stack, Typography, Box, Chip } from '@mui/material'
+import { Paper, Stack, Typography, Box, Chip, Divider } from '@mui/material'
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined'
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined'
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined'
@@ -7,7 +7,7 @@ import type { Locacao } from '../types'
 import { formatMesAno, mesAtualISO, precisaReajuste } from '../calc'
 import { moss, amber, inkSecondary, ink } from '../theme'
 
-function StatCard({
+function StatItem({
   icon,
   label,
   value,
@@ -19,16 +19,11 @@ function StatCard({
   accent: string
 }) {
   return (
-    <Paper
-      variant="outlined"
-      sx={{
-        flex: '1 1 220px',
-        minWidth: 200,
-        p: 2.25,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 1.75,
-      }}
+    <Stack
+      direction="row"
+      spacing={1.5}
+      alignItems="center"
+      sx={{ flex: '1 1 200px', minWidth: 180 }}
     >
       <Box
         sx={{
@@ -53,7 +48,7 @@ function StatCard({
           {label}
         </Typography>
       </Box>
-    </Paper>
+    </Stack>
   )
 }
 
@@ -81,35 +76,45 @@ export default function HomeSummary({ locacoes }: { locacoes: Locacao[] }) {
         />
       </Box>
 
-      <Stack direction="row" spacing={1.5} sx={{ flexWrap: 'wrap' }}>
-        <StatCard
+      <Paper
+        variant="outlined"
+        sx={{
+          p: 2.25,
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          gap: { xs: 2, sm: 3 },
+        }}
+      >
+        <StatItem
           icon={<HomeOutlinedIcon fontSize="small" />}
           label={`Imóve${total === 1 ? 'l' : 'is'} cadastrado${total === 1 ? '' : 's'}`}
           value={total}
           accent={ink}
         />
-        <StatCard
+
+        <Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', sm: 'block' } }} />
+
+        <StatItem
           icon={<CheckCircleOutlinedIcon fontSize="small" />}
           label="Contratos ativos"
           value={ativos}
           accent={moss}
         />
+
+        <Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', sm: 'block' } }} />
+
         {precisamAtencao > 0 ? (
-          <StatCard
+          <StatItem
             icon={<WarningAmberOutlinedIcon fontSize="small" />}
             label="Precisam de atenção (pagamento ou reajuste)"
             value={precisamAtencao}
             accent={amber}
           />
         ) : (
-          <StatCard
-            icon={<CheckCircleOutlinedIcon fontSize="small" />}
-            label="Tudo em dia"
-            value="✓"
-            accent={moss}
-          />
+          <StatItem icon={<CheckCircleOutlinedIcon fontSize="small" />} label="Tudo em dia" value="✓" accent={moss} />
         )}
-      </Stack>
+      </Paper>
     </Stack>
   )
 }
