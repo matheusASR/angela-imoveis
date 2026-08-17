@@ -19,6 +19,8 @@ import {
 } from '@mui/material'
 import HomeWorkOutlinedIcon from '@mui/icons-material/HomeWorkOutlined'
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined'
+import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined'
+import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined'
 
 import type { Cliente, FiltroTipo, Locacao } from './types'
 import { novaLocacaoPadrao } from './types'
@@ -45,7 +47,7 @@ import LocacaoDialog from './components/LocacaoDialog'
 import NovoImovelDialog, { type NovoImovelValues } from './components/NovoImovelDialog'
 import ReportsTab from './components/ReportsTab'
 import ClientesTab from './components/ClientesTab'
-import SegmentedTabs from './components/SegmentedTabs'
+import TabCards from './components/TabCards'
 
 type Aba = 'imoveis' | 'relatorios' | 'clientes'
 
@@ -401,13 +403,13 @@ export default function App() {
       ) : (
         <Container maxWidth={false} sx={{ py: { xs: 2.5, md: 3.5 }, px: { xs: 2, sm: 3, md: 4.5 } }}>
           <Stack spacing={3}>
-            <SegmentedTabs
+            <TabCards
               value={aba}
               onChange={setAba}
               options={[
-                { value: 'imoveis', label: 'Imóveis' },
-                { value: 'relatorios', label: 'Relatórios' },
-                { value: 'clientes', label: 'Clientes' },
+                { value: 'imoveis', label: 'Imóveis', icon: HomeWorkOutlinedIcon },
+                { value: 'relatorios', label: 'Relatórios', icon: AssessmentOutlinedIcon },
+                { value: 'clientes', label: 'Clientes', icon: PeopleAltOutlinedIcon },
               ]}
             />
 
