@@ -46,13 +46,22 @@ export async function deleteLocacao(id: number): Promise<void> {
 }
 
 /**
- * Propaga nome/telefone de um cliente para os imóveis vinculados a ele —
- * só a linha do mês atual (colunas desnormalizadas). Meses históricos
- * mantêm o nome/telefone que valiam naquela época.
+ * Propaga nome/telefone/dados bancários de um cliente para os imóveis
+ * vinculados a ele — só a linha do mês atual (colunas desnormalizadas).
+ * Meses históricos mantêm os dados que valiam naquela época.
  */
 export async function updateLocacoesByProprietario(
   idProprietario: number,
-  changes: Partial<Pick<Locacao, 'nome_proprietario' | 'telefone_proprietario'>>,
+  changes: Partial<
+    Pick<
+      Locacao,
+      | 'nome_proprietario'
+      | 'telefone_proprietario'
+      | 'banco_proprietario'
+      | 'agencia_proprietario'
+      | 'conta_corrente_proprietario'
+    >
+  >,
 ): Promise<Locacao[]> {
   const { data, error } = await supabase
     .from('locacoes')

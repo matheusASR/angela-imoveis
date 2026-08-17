@@ -211,9 +211,15 @@ export default function App() {
     }
   }
 
-  const handleAddCliente = async (nome: string, telefone: string) => {
+  const handleAddCliente = async (values: Omit<Cliente, 'id'>) => {
     try {
-      const novo = await insertCliente({ nome: nome.trim(), telefone: telefone.trim() })
+      const novo = await insertCliente({
+        nome: values.nome.trim(),
+        telefone: values.telefone.trim(),
+        banco: values.banco.trim(),
+        agencia: values.agencia.trim(),
+        conta_corrente: values.conta_corrente.trim(),
+      })
       setClientes((prev) => [...prev, novo])
       showSnack('Cliente adicionado.')
     } catch (e) {
@@ -221,13 +227,19 @@ export default function App() {
     }
   }
 
-  const handleUpdateCliente = async (id: number, changes: Partial<Pick<Cliente, 'nome' | 'telefone'>>) => {
+  const handleUpdateCliente = async (
+    id: number,
+    changes: Partial<Pick<Cliente, 'nome' | 'telefone' | 'banco' | 'agencia' | 'conta_corrente'>>,
+  ) => {
     try {
       const atualizado = await updateCliente(id, changes)
       setClientes((prev) => prev.map((c) => (c.id === id ? atualizado : c)))
       const locacoesAtualizadas = await updateLocacoesByProprietario(id, {
         nome_proprietario: atualizado.nome,
         telefone_proprietario: atualizado.telefone,
+        banco_proprietario: atualizado.banco,
+        agencia_proprietario: atualizado.agencia,
+        conta_corrente_proprietario: atualizado.conta_corrente,
       })
       if (locacoesAtualizadas.length > 0) {
         const porId = new Map(locacoesAtualizadas.map((l) => [l.id, l]))

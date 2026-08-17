@@ -19,6 +19,9 @@ export interface NovoImovelValues {
   id_proprietario: number
   nome_proprietario: string
   telefone_proprietario: string
+  banco_proprietario: string
+  agencia_proprietario: string
+  conta_corrente_proprietario: string
 }
 
 const emptyValues = { local: '', numero_ap: '', id_proprietario: '' as number | '' }
@@ -58,6 +61,9 @@ export default function NovoImovelDialog({
       id_proprietario: values.id_proprietario as number,
       nome_proprietario: cliente?.nome ?? '',
       telefone_proprietario: cliente?.telefone ?? '',
+      banco_proprietario: cliente?.banco ?? '',
+      agencia_proprietario: cliente?.agencia ?? '',
+      conta_corrente_proprietario: cliente?.conta_corrente ?? '',
     })
   }
 
@@ -66,8 +72,8 @@ export default function NovoImovelDialog({
       <DialogTitle>Adicionar imóvel</DialogTitle>
       <DialogContent>
         <Typography sx={{ mb: 2.5, color: 'text.secondary' }}>
-          Preencha só o básico agora. Os outros dados (aluguel, contrato, banco etc.) você
-          adiciona depois, abrindo o imóvel.
+          Preencha só o básico agora. Os outros dados (aluguel, contrato etc.) você adiciona
+          depois, abrindo o imóvel.
         </Typography>
         <Stack spacing={2.5}>
           <TextField

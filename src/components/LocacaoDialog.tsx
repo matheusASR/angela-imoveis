@@ -363,6 +363,9 @@ export default function LocacaoDialog({
                             id_proprietario: id,
                             nome_proprietario: cliente?.nome ?? '',
                             telefone_proprietario: cliente?.telefone ?? '',
+                            banco_proprietario: cliente?.banco ?? '',
+                            agencia_proprietario: cliente?.agencia ?? '',
+                            conta_corrente_proprietario: cliente?.conta_corrente ?? '',
                           }
                         : prev,
                     )
@@ -390,13 +393,34 @@ export default function LocacaoDialog({
                 />
               </Grid>
               <Grid item xs={12} sm={4}>
-                {txtField('Banco', 'banco_proprietario')}
+                <TextField
+                  label="Banco"
+                  fullWidth
+                  size="small"
+                  disabled
+                  value={form.banco_proprietario || '—'}
+                  helperText="Editável na aba Clientes"
+                />
               </Grid>
               <Grid item xs={12} sm={4}>
-                {txtField('Agência', 'agencia_proprietario')}
+                <TextField
+                  label="Agência"
+                  fullWidth
+                  size="small"
+                  disabled
+                  value={form.agencia_proprietario || '—'}
+                  helperText="Editável na aba Clientes"
+                />
               </Grid>
               <Grid item xs={12} sm={4}>
-                {txtField('Conta corrente', 'conta_corrente_proprietario')}
+                <TextField
+                  label="Conta corrente"
+                  fullWidth
+                  size="small"
+                  disabled
+                  value={form.conta_corrente_proprietario || '—'}
+                  helperText="Editável na aba Clientes"
+                />
               </Grid>
               <Grid item xs={12} sm={6}>
                 {numField('Extra do proprietário', 'valor_extra_proprietario', { adornment: 'R$' })}

@@ -35,26 +35,32 @@ function imoveisDoCliente(cliente: Cliente, locacoes: Locacao[]): string[] {
     .map((l) => `${l.local || 'Sem endereço'}${l.numero_ap ? ' - Apto ' + l.numero_ap : ''}`)
 }
 
-function TelefoneCell({
+function EditableCell({
   cliente,
+  campo,
+  placeholder,
   onSave,
+  minWidth = 170,
 }: {
   cliente: Cliente
-  onSave: (id: number, telefone: string) => void
+  campo: keyof Pick<Cliente, 'telefone' | 'banco' | 'agencia' | 'conta_corrente'>
+  placeholder: string
+  onSave: (id: number, changes: Partial<Cliente>) => void
+  minWidth?: number
 }) {
-  const [valor, setValor] = useState(cliente.telefone)
+  const [valor, setValor] = useState(cliente[campo])
   const [editando, setEditando] = useState(false)
 
   const commit = () => {
     setEditando(false)
-    if (valor !== cliente.telefone) onSave(cliente.id, valor)
+    if (valor !== cliente[campo]) onSave(cliente.id, { [campo]: valor })
   }
 
   return (
     <TextField
       size="small"
       variant={editando ? 'outlined' : 'standard'}
-      placeholder="Adicionar telefone…"
+      placeholder={placeholder}
       value={valor}
       onFocus={() => setEditando(true)}
       onChange={(e) => setValor(e.target.value)}
@@ -63,7 +69,7 @@ function TelefoneCell({
         if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
       }}
       InputProps={{ disableUnderline: !editando }}
-      sx={{ minWidth: 170 }}
+      sx={{ minWidth }}
     />
   )
 }
@@ -75,15 +81,21 @@ function NovoClienteDialog({
 }: {
   open: boolean
   onClose: () => void
-  onSave: (nome: string, telefone: string) => void
+  onSave: (values: Omit<Cliente, 'id'>) => void
 }) {
   const [nome, setNome] = useState('')
   const [telefone, setTelefone] = useState('')
+  const [banco, setBanco] = useState('')
+  const [agencia, setAgencia] = useState('')
+  const [contaCorrente, setContaCorrente] = useState('')
   const [erro, setErro] = useState('')
 
   const handleClose = () => {
     setNome('')
     setTelefone('')
+    setBanco('')
+    setAgencia('')
+    setContaCorrente('')
     setErro('')
     onClose()
   }
@@ -93,7 +105,13 @@ function NovoClienteDialog({
       setErro('Campo obrigatório')
       return
     }
-    onSave(nome, telefone)
+    onSave({
+      nome,
+      telefone,
+      banco,
+      agencia,
+      conta_corrente: contaCorrente,
+    })
     handleClose()
   }
 
@@ -116,6 +134,24 @@ function NovoClienteDialog({
             fullWidth
             value={telefone}
             onChange={(e) => setTelefone(e.target.value)}
+          />
+          <TextField
+            label="Banco"
+            fullWidth
+            value={banco}
+            onChange={(e) => setBanco(e.target.value)}
+          />
+          <TextField
+            label="Agência"
+            fullWidth
+            value={agencia}
+            onChange={(e) => setAgencia(e.target.value)}
+          />
+          <TextField
+            label="Conta corrente"
+            fullWidth
+            value={contaCorrente}
+            onChange={(e) => setContaCorrente(e.target.value)}
           />
         </Stack>
       </DialogContent>
@@ -140,8 +176,11 @@ export default function ClientesTab({
 }: {
   locacoes: Locacao[]
   clientes: Cliente[]
-  onAdd: (nome: string, telefone: string) => void
-  onUpdate: (id: number, changes: Partial<Pick<Cliente, 'nome' | 'telefone'>>) => void
+  onAdd: (values: Omit<Cliente, 'id'>) => void
+  onUpdate: (
+    id: number,
+    changes: Partial<Pick<Cliente, 'nome' | 'telefone' | 'banco' | 'agencia' | 'conta_corrente'>>,
+  ) => void
   onDelete: (cliente: Cliente) => void
 }) {
   const [novoOpen, setNovoOpen] = useState(false)
@@ -161,8 +200,10 @@ export default function ClientesTab({
               {clientes.length === 1 ? '' : 's'}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              Edite o telefone diretamente na tabela. Clientes cadastrados aqui ficam disponíveis no
-              select de proprietário ao criar ou editar um imóvel.
+              Edite telefone, banco, agência e conta corrente diretamente na tabela. Clientes
+              cadastrados aqui ficam disponíveis no select de proprietário ao criar ou editar um
+              imóvel — os dados bancários são preenchidos automaticamente lá e só podem ser
+              editados aqui.
             </Typography>
           </Box>
           <Button variant="contained" startIcon={<AddIcon />} onClick={() => setNovoOpen(true)}>
@@ -177,6 +218,9 @@ export default function ClientesTab({
             <TableRow>
               <TableCell>Proprietário</TableCell>
               <TableCell>Telefone</TableCell>
+              <TableCell>Banco</TableCell>
+              <TableCell>Agência</TableCell>
+              <TableCell>Conta corrente</TableCell>
               <TableCell>Imóveis</TableCell>
               <TableCell align="right"></TableCell>
             </TableRow>
@@ -184,7 +228,7 @@ export default function ClientesTab({
           <TableBody>
             {clientesOrdenados.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} align="center" sx={{ py: 4 }}>
+                <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
                   <Typography color="text.secondary">Nenhum cliente cadastrado.</Typography>
                 </TableCell>
               </TableRow>
@@ -195,9 +239,38 @@ export default function ClientesTab({
                   <TableRow key={c.id} hover>
                     <TableCell sx={{ fontWeight: 600 }}>{c.nome}</TableCell>
                     <TableCell>
-                      <TelefoneCell
+                      <EditableCell
                         cliente={c}
-                        onSave={(id, telefone) => onUpdate(id, { telefone })}
+                        campo="telefone"
+                        placeholder="Adicionar telefone…"
+                        onSave={onUpdate}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <EditableCell
+                        cliente={c}
+                        campo="banco"
+                        placeholder="Adicionar banco…"
+                        onSave={onUpdate}
+                        minWidth={120}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <EditableCell
+                        cliente={c}
+                        campo="agencia"
+                        placeholder="Adicionar agência…"
+                        onSave={onUpdate}
+                        minWidth={110}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <EditableCell
+                        cliente={c}
+                        campo="conta_corrente"
+                        placeholder="Adicionar conta…"
+                        onSave={onUpdate}
+                        minWidth={130}
                       />
                     </TableCell>
                     <TableCell>

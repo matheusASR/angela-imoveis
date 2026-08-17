@@ -26,6 +26,13 @@ create table if not exists public.clientes (
   created_at timestamptz not null default now()
 );
 
+-- Dados bancários do cliente: cadastrados/editados só na aba Clientes e
+-- propagados (denormalizados) para locacoes.banco_proprietario etc. abaixo,
+-- da mesma forma que nome/telefone já eram propagados.
+alter table public.clientes add column if not exists banco text not null default '';
+alter table public.clientes add column if not exists agencia text not null default '';
+alter table public.clientes add column if not exists conta_corrente text not null default '';
+
 create table if not exists public.locacoes (
   id integer generated always as identity primary key,
   local text not null default '',
@@ -51,6 +58,9 @@ create table if not exists public.locacoes (
   mes_contrato_atual integer not null default 0,
   parcela_iptu_atual integer not null default 0,
   data_revisao_reajuste text not null default '',
+  -- Copiados de clientes.banco/agencia/conta_corrente ao selecionar o
+  -- proprietário e sincronizados quando editados na aba Clientes — não são
+  -- editáveis diretamente no imóvel (ver comentário em public.clientes).
   banco_proprietario text not null default '',
   agencia_proprietario text not null default '',
   conta_corrente_proprietario text not null default '',

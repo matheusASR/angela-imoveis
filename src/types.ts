@@ -57,6 +57,9 @@ export interface Cliente {
   id: number
   nome: string
   telefone: string
+  banco: string
+  agencia: string
+  conta_corrente: string
 }
 
 export interface AppData {
