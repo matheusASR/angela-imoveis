@@ -2,7 +2,7 @@
 
 Sistema de controle de locações para uma corretora individual. Os dados ficam
 salvos no **Supabase** (Postgres na nuvem) e o acesso é restrito a uma única
-conta, via link mágico por e-mail (Supabase Auth). A aplicação em si é só
+conta, com login por e-mail e senha (Supabase Auth). A aplicação em si é só
 front-end estático, pensada para ser hospedada no **Cloudflare Pages**.
 
 ## Como rodar localmente
@@ -36,14 +36,17 @@ npm run preview
 3. Restrinja o acesso a uma única pessoa (a corretora):
    - Em **Authentication > Providers > Email**, desative **"Allow new users
      to sign up"**. Isso impede que qualquer e-mail crie conta sozinho.
-   - Em **Authentication > Users**, clique em **Invite user** e cadastre o
-     e-mail da corretora. Esse será o único login que funciona.
+   - Em **Authentication > Users**, clique em **Add user > Create new user**
+     e cadastre o e-mail e a senha da corretora diretamente (marque **Auto
+     Confirm User** para que ela já possa entrar sem precisar confirmar o
+     e-mail). Essas serão as únicas credenciais que funcionam no sistema.
 4. Pegue a URL e a chave pública do projeto em **Project Settings > API**
    (campos "Project URL" e "anon public") e coloque no seu `.env` (veja
    `.env.example`).
 
-O login no app funciona por **link mágico**: a corretora digita o e-mail
-cadastrado, recebe um link por e-mail e clica para entrar — sem senha.
+O login no app é tradicional, por **e-mail e senha** — sem link por e-mail.
+A senha nunca é armazenada pelo sistema: quem valida e guarda a credencial é
+o próprio Supabase Auth.
 
 ## 2. Hospedar no Cloudflare Pages
 
@@ -102,8 +105,8 @@ cadastrado, recebe um link por e-mail e clica para entrar — sem senha.
 Tudo é gravado no Postgres do seu projeto Supabase (tabelas `locacoes` e
 `clientes`, ver [`supabase/schema.sql`](supabase/schema.sql)). O acesso só é
 permitido para quem estiver autenticado — e só a corretora consegue se
-autenticar, já que o cadastro público fica desativado e apenas o e-mail dela é
-convidado manualmente.
+autenticar, já que o cadastro público fica desativado e só a conta dela é
+criada manualmente no painel do Supabase.
 
 ## Estrutura do projeto
 
@@ -116,9 +119,10 @@ src/
   calc.ts                   regras de negócio (administração, reajuste, formatação)
   theme.ts                  identidade visual (cores, tipografia)
   lib/supabaseClient.ts     cliente do Supabase (lê VITE_SUPABASE_URL/ANON_KEY)
+  hooks/useSession.ts       hook que centraliza a sessão do Supabase Auth
   App.tsx                   tela principal, estado e integração dos componentes
   components/
-    LoginScreen.tsx          tela de login por link mágico
+    LoginScreen.tsx          tela de login por e-mail e senha
     Toolbar.tsx               busca, filtros e botão de adicionar imóvel
     LocacaoTable.tsx          tabela principal de imóveis (com edição in-line)
     LocacaoDialog.tsx         ficha de cadastro/edição/visualização

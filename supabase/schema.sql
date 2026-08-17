@@ -6,9 +6,10 @@
 -- Modelo de acesso: acesso de escrita/leitura liberado para qualquer usuário
 -- autenticado (role "authenticated"). Como o cadastro público fica desativado
 -- (Authentication > Sign In / Providers > Email > "Allow new users to sign
--- up" desligado) e só a corretora é convidada manualmente (Authentication >
--- Users > Invite user), na prática só ela consegue obter uma sessão válida —
--- por isso não é necessário checar o e-mail dentro das políticas.
+-- up" desligado) e a conta da corretora é criada manualmente com e-mail e
+-- senha (Authentication > Users > Add user), na prática só ela consegue
+-- obter uma sessão válida — por isso não é necessário checar o e-mail
+-- dentro das políticas.
 
 -- OBS.: id/id_proprietario usam "integer" (não "bigint") e os valores
 -- monetários usam "double precision" (não "numeric") de propósito: a API

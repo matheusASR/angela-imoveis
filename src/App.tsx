@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { Session } from '@supabase/supabase-js'
 import {
   AppBar,
   Toolbar as MuiToolbar,
@@ -35,6 +34,7 @@ import {
 } from './storage'
 import { aplicarReferenciaMensal, calcValorAdm, precisaReajuste, hojeISO } from './calc'
 import { supabase } from './lib/supabaseClient'
+import { useSession } from './hooks/useSession'
 import { appBarShadow } from './theme'
 
 import LoginScreen from './components/LoginScreen'
@@ -50,7 +50,7 @@ import SegmentedTabs from './components/SegmentedTabs'
 type Aba = 'imoveis' | 'relatorios' | 'clientes'
 
 export default function App() {
-  const [session, setSession] = useState<Session | null | undefined>(undefined)
+  const session = useSession()
 
   const [locacoes, setLocacoes] = useState<Locacao[]>([])
   const [clientes, setClientes] = useState<Cliente[]>([])
@@ -76,13 +76,6 @@ export default function App() {
 
   const showErro = (e: unknown) =>
     showSnack(e instanceof Error ? e.message : 'Ocorreu um erro ao falar com o servidor.', 'error')
-
-  // Sessão do Supabase Auth: undefined = ainda verificando, null = deslogado.
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session))
-    const { data: subscription } = supabase.auth.onAuthStateChange((_event, s) => setSession(s))
-    return () => subscription.subscription.unsubscribe()
-  }, [])
 
   // Carrega os dados do Supabase assim que há sessão. Ao carregar, aplica a
   // virada de mês pendente: qualquer locação cuja competência não seja mais

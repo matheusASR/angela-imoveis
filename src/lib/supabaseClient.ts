@@ -9,4 +9,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
   )
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    // Mantém a sessão salva (localStorage) entre acessos e renova o token
+    // de acesso automaticamente em background antes dele expirar.
+    persistSession: true,
+    autoRefreshToken: true,
+  },
+})
