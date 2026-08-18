@@ -1,7 +1,7 @@
 import { mesAtualISO, parcelaIptuAtualPadrao } from './calc'
 
-/** Quem paga o valor diretamente: o próprio inquilino, ou a administradora (ADM). */
-export type FormaPagamento = 'inquilino' | 'adm'
+/** Quem paga o valor diretamente: o próprio locatário, ou a administradora (ADM). */
+export type FormaPagamento = 'locatario' | 'adm'
 
 export interface Locacao {
   id: number
@@ -23,11 +23,11 @@ export interface Locacao {
   valor_multa: number
   /** Valor extra referente ao proprietário, descontado do repasse. */
   valor_extra_proprietario: number
-  /** Quem paga o condomínio: diretamente o inquilino, ou a ADM. */
+  /** Quem paga o condomínio: diretamente o locatário, ou a ADM. */
   pagamento_condominio: FormaPagamento
-  /** Quem paga o IPTU: diretamente o inquilino, ou a ADM. */
+  /** Quem paga o IPTU: diretamente o locatário, ou a ADM. */
   pagamento_iptu: FormaPagamento
-  /** Quem paga os benefícios/extras do inquilino: diretamente o inquilino, ou a ADM. */
+  /** Quem paga os benefícios/extras do locatário: diretamente o locatário, ou a ADM. */
   pagamento_extras: FormaPagamento
   nome_proprietario: string
   telefone_proprietario: string

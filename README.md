@@ -70,7 +70,7 @@ o próprio Supabase Auth.
   (locatário, valores, dados bancários, datas) é preenchido depois, clicando
   no imóvel.
 - **Edição direta na tabela**: aluguel, condomínio, IPTU mensal, extras do
-  inquilino, multa, taxa ADM e extras do proprietário podem ser editados
+  locatário, multa, taxa ADM e extras do proprietário podem ser editados
   clicando diretamente na célula, sem abrir a ficha do imóvel.
 - **Cálculo automático da administração**: 7% sobre (aluguel + multa) para
   imóveis da categoria **PREDINHO**, e 8% para os demais — recalculado

@@ -168,7 +168,7 @@ export default function LocacaoTable({
               <TableCell align="right">Aluguel</TableCell>
               <TableCell align="right">Condomínio</TableCell>
               <TableCell align="right">IPTU (mensal)</TableCell>
-              <TableCell align="right">Extras inquilino</TableCell>
+              <TableCell align="right">Extras locatário</TableCell>
               <TableCell align="right">Multa</TableCell>
               <TableCell align="right">Taxa ADM</TableCell>
               <TableCell align="right">Extras proprietário</TableCell>

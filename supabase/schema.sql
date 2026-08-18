@@ -69,9 +69,9 @@ create table if not exists public.locacoes (
   valor_extras double precision not null default 0,
   valor_multa double precision not null default 0,
   valor_extra_proprietario double precision not null default 0,
-  pagamento_condominio text not null default 'adm' check (pagamento_condominio in ('inquilino', 'adm')),
-  pagamento_iptu text not null default 'adm' check (pagamento_iptu in ('inquilino', 'adm')),
-  pagamento_extras text not null default 'adm' check (pagamento_extras in ('inquilino', 'adm')),
+  pagamento_condominio text not null default 'adm' check (pagamento_condominio in ('locatario', 'adm')),
+  pagamento_iptu text not null default 'adm' check (pagamento_iptu in ('locatario', 'adm')),
+  pagamento_extras text not null default 'adm' check (pagamento_extras in ('locatario', 'adm')),
   nome_proprietario text not null default '',
   telefone_proprietario text not null default '',
   data_pagamento_proprietario text not null default '',
@@ -136,6 +136,27 @@ create index if not exists locacoes_id_locatario_idx on public.locacoes (id_loca
 -- Chave PIX do proprietário, denormalizada de clientes.chave_pix (ver
 -- comentário lá).
 alter table public.locacoes add column if not exists chave_pix_proprietario text not null default '';
+
+-- Renomeia o valor "inquilino" para "locatário" (mesmo termo usado no resto
+-- do app) nas colunas de forma de pagamento. As constraints precisam ser
+-- derrubadas antes do update (senão o valor novo violaria a constraint
+-- antiga) e recriadas depois — idempotente: rodar de novo só recria as
+-- mesmas constraints e os updates não encontram mais linhas com o valor
+-- antigo.
+alter table public.locacoes drop constraint if exists locacoes_pagamento_condominio_check;
+alter table public.locacoes drop constraint if exists locacoes_pagamento_iptu_check;
+alter table public.locacoes drop constraint if exists locacoes_pagamento_extras_check;
+
+update public.locacoes set pagamento_condominio = 'locatario' where pagamento_condominio = 'inquilino';
+update public.locacoes set pagamento_iptu = 'locatario' where pagamento_iptu = 'inquilino';
+update public.locacoes set pagamento_extras = 'locatario' where pagamento_extras = 'inquilino';
+
+alter table public.locacoes
+  add constraint locacoes_pagamento_condominio_check check (pagamento_condominio in ('locatario', 'adm'));
+alter table public.locacoes
+  add constraint locacoes_pagamento_iptu_check check (pagamento_iptu in ('locatario', 'adm'));
+alter table public.locacoes
+  add constraint locacoes_pagamento_extras_check check (pagamento_extras in ('locatario', 'adm'));
 
 alter table public.clientes enable row level security;
 alter table public.locacoes enable row level security;

@@ -150,8 +150,8 @@ export default function LocacaoDialog({
         value={form[field] as FormaPagamento}
         onChange={(_, v: FormaPagamento | null) => v && update(field, v)}
       >
-        <ToggleButton value="inquilino" sx={{ textTransform: 'none' }}>
-          Direto pelo inquilino
+        <ToggleButton value="locatario" sx={{ textTransform: 'none' }}>
+          Direto pelo locatário
         </ToggleButton>
         <ToggleButton value="adm" sx={{ textTransform: 'none' }}>
           Pela ADM
@@ -339,7 +339,7 @@ export default function LocacaoDialog({
 
           <Stack spacing={1.5}>
             <Typography variant="overline" color="text.secondary">
-              Valores do inquilino
+              Valores do locatário
             </Typography>
             <Grid container spacing={1.5}>
               <Grid item xs={12} sm={6}>
@@ -380,14 +380,14 @@ export default function LocacaoDialog({
               )}
 
               <Grid item xs={12} sm={6}>
-                {numField('Benefícios do inquilino (extras)', 'valor_extras', { adornment: 'R$' })}
+                {numField('Benefícios do locatário (extras)', 'valor_extras', { adornment: 'R$' })}
               </Grid>
               <Grid item xs={12} sm={6}>
                 {formaPagamentoField('Extras pagos', 'pagamento_extras')}
               </Grid>
             </Grid>
             <Typography variant="caption" color="text.secondary">
-              Quando marcados como "Direto pelo inquilino", esses valores não entram no cálculo do
+              Quando marcados como "Direto pelo locatário", esses valores não entram no cálculo do
               repasse ao proprietário. A Multa (acima) sempre entra na soma quando houver.
             </Typography>
           </Stack>

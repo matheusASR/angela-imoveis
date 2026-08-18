@@ -188,11 +188,11 @@ export function contratoPertoDoFim(data_inicio_contrato: string, meses_contrato:
 
 /**
  * Valor a ser pago ao proprietário:
- * Aluguel + Condomínio + IPTU (parcela do mês) + Benefícios do Inquilino (Extras) + Multa (se houver)
+ * Aluguel + Condomínio + IPTU (parcela do mês) + Benefícios do Locatário (Extras) + Multa (se houver)
  * - Taxa ADM - Extra do Proprietário
  *
  * Condomínio, IPTU e Extras só entram na soma quando marcados como pagos
- * pela ADM — se forem pagos diretamente pelo inquilino, não entram no
+ * pela ADM — se forem pagos diretamente pelo locatário, não entram no
  * repasse ao proprietário. O Aluguel e a Multa (quando houver) sempre
  * entram na soma.
  */
@@ -210,7 +210,7 @@ export function valorAPagarProprietario(l: Locacao): number {
 }
 
 export function formatFormaPagamento(f: FormaPagamento): string {
-  return f === 'inquilino' ? 'Direto pelo inquilino' : 'Pela ADM'
+  return f === 'locatario' ? 'Direto pelo locatário' : 'Pela ADM'
 }
 
 /**
