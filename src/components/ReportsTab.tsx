@@ -32,7 +32,6 @@ import { fetchLocacoesPorMes } from '../storage'
 type LinhaRelatorio = {
   imovel: string
   proprietario: string
-  telefone: string
   locatario: string
   tempoContrato: string
   aluguel: number
@@ -51,7 +50,6 @@ function montarLinhas(locacoes: Locacao[], ano: number, mes: number): LinhaRelat
   return locacoes.map((l) => ({
     imovel: `${l.local || 'Sem endereço'}${l.numero_ap ? ' - Apto ' + l.numero_ap : ''}`,
     proprietario: l.nome_proprietario || '—',
-    telefone: l.telefone_proprietario || '—',
     locatario: l.nome_locatario || '—',
     tempoContrato: formatParcelaContrato(
       calcularMesContratoEm(l.data_inicio_contrato, l.meses_contrato, ano, mes),
@@ -140,7 +138,6 @@ export default function ReportsTab() {
       <tr>
         <td>${escapeHtml(l.imovel)}</td>
         <td>${escapeHtml(l.proprietario)}</td>
-        <td>${escapeHtml(l.telefone)}</td>
         <td>${escapeHtml(l.locatario)}</td>
         <td>${escapeHtml(l.tempoContrato)}</td>
         <td class="num">${formatMoeda(l.aluguel)}</td>
@@ -178,7 +175,7 @@ export default function ReportsTab() {
   <table>
     <thead>
       <tr>
-        <th>Imóvel</th><th>Proprietário</th><th>Telefone</th><th>Locatário</th><th>Tempo de contrato</th>
+        <th>Imóvel</th><th>Proprietário</th><th>Locatário</th><th>Tempo de contrato</th>
         <th>Aluguel</th><th>Condomínio</th><th>IPTU</th><th>Extras</th>
         <th>Multa</th><th>Taxa ADM</th><th>Extra Prop.</th><th>A pagar ao proprietário</th>
       </tr>
@@ -186,7 +183,7 @@ export default function ReportsTab() {
     <tbody>${linhasHtml}</tbody>
     <tfoot>
       <tr>
-        <td colspan="5">Total</td>
+        <td colspan="4">Total</td>
         <td class="num">${formatMoeda(totais.aluguel)}</td>
         <td class="num">${formatMoeda(totais.condominio)}</td>
         <td class="num">${formatMoeda(totais.valorIptu)}</td>
@@ -232,7 +229,7 @@ export default function ReportsTab() {
       startY: 62,
       head: [
         [
-          'Imóvel', 'Proprietário', 'Telefone', 'Locatário', 'Tempo de contrato',
+          'Imóvel', 'Proprietário', 'Locatário', 'Tempo de contrato',
           'Aluguel', 'Condomínio', 'IPTU', 'Extras',
           'Multa', 'Taxa ADM', 'Extra Prop.', 'A pagar',
         ],
@@ -240,7 +237,6 @@ export default function ReportsTab() {
       body: linhas.map((l) => [
         l.imovel,
         l.proprietario,
-        l.telefone,
         l.locatario,
         l.tempoContrato,
         formatMoeda(l.aluguel),
@@ -254,7 +250,7 @@ export default function ReportsTab() {
       ]),
       foot: [
         [
-          'Total', '', '', '', '',
+          'Total', '', '', '',
           formatMoeda(totais.aluguel),
           formatMoeda(totais.condominio),
           formatMoeda(totais.valorIptu),
@@ -323,7 +319,6 @@ export default function ReportsTab() {
             <TableRow>
               <TableCell>Imóvel</TableCell>
               <TableCell>Proprietário</TableCell>
-              <TableCell>Telefone</TableCell>
               <TableCell>Locatário</TableCell>
               <TableCell>Tempo de contrato</TableCell>
               <TableCell align="right">Aluguel</TableCell>
@@ -339,13 +334,13 @@ export default function ReportsTab() {
           <TableBody>
             {carregando ? (
               <TableRow>
-                <TableCell colSpan={13} align="center" sx={{ py: 4 }}>
+                <TableCell colSpan={12} align="center" sx={{ py: 4 }}>
                   <CircularProgress size={22} />
                 </TableCell>
               </TableRow>
             ) : linhas.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={13} align="center" sx={{ py: 4 }}>
+                <TableCell colSpan={12} align="center" sx={{ py: 4 }}>
                   <Typography color="text.secondary">
                     Nenhum registro para {nomeMes}/{ano} com este filtro.
                   </Typography>
@@ -356,7 +351,6 @@ export default function ReportsTab() {
                 <TableRow key={i} hover>
                   <TableCell>{l.imovel}</TableCell>
                   <TableCell>{l.proprietario}</TableCell>
-                  <TableCell>{l.telefone}</TableCell>
                   <TableCell>{l.locatario}</TableCell>
                   <TableCell>{l.tempoContrato}</TableCell>
                   <TableCell align="right" sx={{ fontFamily: '"IBM Plex Mono", monospace' }}>
@@ -391,7 +385,7 @@ export default function ReportsTab() {
             )}
             {linhas.length > 0 && (
               <TableRow>
-                <TableCell colSpan={5} sx={{ fontWeight: 700 }}>
+                <TableCell colSpan={4} sx={{ fontWeight: 700 }}>
                   Total
                 </TableCell>
                 <TableCell
