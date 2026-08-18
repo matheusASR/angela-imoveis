@@ -1,11 +1,21 @@
 import { Paper, Stack, Typography, Box, Chip, Divider } from '@mui/material'
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined'
+import ApartmentOutlinedIcon from '@mui/icons-material/ApartmentOutlined'
+import EventBusyOutlinedIcon from '@mui/icons-material/EventBusyOutlined'
+import PendingActionsOutlinedIcon from '@mui/icons-material/PendingActionsOutlined'
+import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined'
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined'
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined'
 import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined'
 import type { Locacao } from '../types'
-import { formatMesAno, mesAtualISO, precisaReajuste } from '../calc'
-import { moss, amber, inkSecondary, ink } from '../theme'
+import {
+  contratoPertoDoFim,
+  formatMesAno,
+  mesAtualISO,
+  precisaReajuste,
+  reajusteJaRevisado,
+} from '../calc'
+import { brick, moss, amber, rose, inkSecondary, ink } from '../theme'
 
 function StatItem({
   icon,
@@ -54,8 +64,18 @@ function StatItem({
 
 export default function HomeSummary({ locacoes }: { locacoes: Locacao[] }) {
   const total = locacoes.length
-  const precisamAtencao = locacoes.filter((l) => l.ativo && !l.data_pagamento_locatario).length
-  const ativos = locacoes.filter((l) => l.ativo).length
+  const predinho = locacoes.filter((l) => l.predinho === 1).length
+  const pertoDoFim = locacoes.filter(
+    (l) => l.ativo && contratoPertoDoFim(l.data_inicio_contrato, l.meses_contrato),
+  ).length
+  const locatariosPendentes = locacoes.filter((l) => l.ativo && !l.data_pagamento_locatario).length
+  const proprietariosPendentes = locacoes.filter((l) => l.ativo && !l.data_pagamento_proprietario).length
+  const reajustesPendentes = locacoes.filter(
+    (l) =>
+      l.ativo &&
+      precisaReajuste(l.data_inicio_contrato) &&
+      !reajusteJaRevisado(l.data_inicio_contrato, l.data_revisao_reajuste),
+  ).length
 
   return (
     <Stack spacing={1.25}>
@@ -96,23 +116,50 @@ export default function HomeSummary({ locacoes }: { locacoes: Locacao[] }) {
         <Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', sm: 'block' } }} />
 
         <StatItem
-          icon={<CheckCircleOutlinedIcon fontSize="small" />}
-          label="Contratos ativos"
-          value={ativos}
-          accent={moss}
+          icon={<ApartmentOutlinedIcon fontSize="small" />}
+          label="PREDINHO"
+          value={predinho}
+          accent={brick}
         />
 
         <Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', sm: 'block' } }} />
 
-        {precisamAtencao > 0 ? (
+        <StatItem
+          icon={<EventBusyOutlinedIcon fontSize="small" />}
+          label="Com 3 meses ou menos para o fim"
+          value={pertoDoFim}
+          accent={rose}
+        />
+
+        <Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', sm: 'block' } }} />
+
+        <StatItem
+          icon={<PendingActionsOutlinedIcon fontSize="small" />}
+          label="Locatários sem pagamento"
+          value={locatariosPendentes}
+          accent={amber}
+        />
+
+        <Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', sm: 'block' } }} />
+
+        <StatItem
+          icon={<AccountBalanceWalletOutlinedIcon fontSize="small" />}
+          label="Proprietários a pagar"
+          value={proprietariosPendentes}
+          accent={amber}
+        />
+
+        <Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', sm: 'block' } }} />
+
+        {reajustesPendentes > 0 ? (
           <StatItem
             icon={<WarningAmberOutlinedIcon fontSize="small" />}
-            label="Precisam de atenção (pagamento ou reajuste)"
-            value={precisamAtencao}
+            label="Reajustes IPCA/IGP-M pendentes"
+            value={reajustesPendentes}
             accent={amber}
           />
         ) : (
-          <StatItem icon={<CheckCircleOutlinedIcon fontSize="small" />} label="Tudo em dia" value="✓" accent={moss} />
+          <StatItem icon={<CheckCircleOutlinedIcon fontSize="small" />} label="Reajustes em dia" value="✓" accent={moss} />
         )}
       </Paper>
     </Stack>
