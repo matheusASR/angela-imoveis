@@ -21,8 +21,9 @@ import HomeWorkOutlinedIcon from '@mui/icons-material/HomeWorkOutlined'
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined'
 import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined'
 import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined'
+import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined'
 
-import type { Cliente, FiltroTipo, Locacao } from './types'
+import type { Cliente, FiltroTipo, Locacao, Locatario } from './types'
 import { novaLocacaoPadrao } from './types'
 import {
   fetchAppData,
@@ -34,8 +35,12 @@ import {
   updateCliente,
   deleteCliente,
   updateLocacoesByProprietario,
+  insertLocatario,
+  updateLocatario,
+  deleteLocatario,
+  updateLocacoesByLocatario,
 } from './storage'
-import { calcValorAdm, precisaReajuste, reajusteJaRevisado, hojeISO } from './calc'
+import { calcValorAdm, normalizarBusca, precisaReajuste, reajusteJaRevisado, hojeISO } from './calc'
 import { supabase } from './lib/supabaseClient'
 import { useSession } from './hooks/useSession'
 import { appBarShadow } from './theme'
@@ -48,15 +53,17 @@ import LocacaoDialog from './components/LocacaoDialog'
 import NovoImovelDialog, { type NovoImovelValues } from './components/NovoImovelDialog'
 import ReportsTab from './components/ReportsTab'
 import ClientesTab from './components/ClientesTab'
+import LocatariosTab from './components/LocatariosTab'
 import TabCards from './components/TabCards'
 
-type Aba = 'imoveis' | 'relatorios' | 'clientes'
+type Aba = 'imoveis' | 'relatorios' | 'clientes' | 'locatarios'
 
 export default function App() {
   const session = useSession()
 
   const [locacoes, setLocacoes] = useState<Locacao[]>([])
   const [clientes, setClientes] = useState<Cliente[]>([])
+  const [locatarios, setLocatarios] = useState<Locatario[]>([])
   const [carregando, setCarregando] = useState(true)
   const [query, setQuery] = useState('')
   const [filtro, setFiltro] = useState<FiltroTipo>('todos')
@@ -68,6 +75,7 @@ export default function App() {
 
   const [confirmDelete, setConfirmDelete] = useState<Locacao | null>(null)
   const [confirmDeleteCliente, setConfirmDeleteCliente] = useState<Cliente | null>(null)
+  const [confirmDeleteLocatario, setConfirmDeleteLocatario] = useState<Locatario | null>(null)
   const [snack, setSnack] = useState<{ open: boolean; msg: string; severity: 'success' | 'error' | 'info' }>({
     open: false,
     msg: '',
@@ -97,6 +105,7 @@ export default function App() {
         if (cancelado) return
         setLocacoes(data.locacoes)
         setClientes(data.clientes)
+        setLocatarios(data.locatarios)
       })
       .catch(showErro)
       .finally(() => {
@@ -126,13 +135,13 @@ export default function App() {
     let list = locacoes
 
     if (query.trim()) {
-      const q = query.trim().toLowerCase()
+      const q = normalizarBusca(query.trim())
       list = list.filter(
         (l) =>
-          l.nome_locatario.toLowerCase().includes(q) ||
-          l.nome_proprietario.toLowerCase().includes(q) ||
-          l.local.toLowerCase().includes(q) ||
-          l.numero_ap.toLowerCase().includes(q),
+          normalizarBusca(l.nome_locatario).includes(q) ||
+          normalizarBusca(l.nome_proprietario).includes(q) ||
+          normalizarBusca(l.local).includes(q) ||
+          normalizarBusca(l.numero_ap).includes(q),
       )
     }
 
@@ -228,9 +237,10 @@ export default function App() {
         banco: values.banco.trim(),
         agencia: values.agencia.trim(),
         conta_corrente: values.conta_corrente.trim(),
+        chave_pix: values.chave_pix.trim(),
       })
       setClientes((prev) => [...prev, novo])
-      showSnack('Cliente adicionado.')
+      showSnack('Proprietário adicionado.')
     } catch (e) {
       showErro(e)
     }
@@ -238,7 +248,9 @@ export default function App() {
 
   const handleUpdateCliente = async (
     id: number,
-    changes: Partial<Pick<Cliente, 'nome' | 'telefone' | 'banco' | 'agencia' | 'conta_corrente'>>,
+    changes: Partial<
+      Pick<Cliente, 'nome' | 'telefone' | 'banco' | 'agencia' | 'conta_corrente' | 'chave_pix'>
+    >,
   ) => {
     try {
       const atualizado = await updateCliente(id, changes)
@@ -249,12 +261,13 @@ export default function App() {
         banco_proprietario: atualizado.banco,
         agencia_proprietario: atualizado.agencia,
         conta_corrente_proprietario: atualizado.conta_corrente,
+        chave_pix_proprietario: atualizado.chave_pix,
       })
       if (locacoesAtualizadas.length > 0) {
         const porId = new Map(locacoesAtualizadas.map((l) => [l.id, l]))
         setLocacoes((prev) => prev.map((l) => porId.get(l.id) ?? l))
       }
-      showSnack('Cliente atualizado.')
+      showSnack('Proprietário atualizado.')
     } catch (e) {
       showErro(e)
     }
@@ -267,11 +280,62 @@ export default function App() {
     try {
       await deleteCliente(confirmDeleteCliente.id)
       setClientes((prev) => prev.filter((c) => c.id !== confirmDeleteCliente.id))
-      showSnack('Cliente excluído.', 'info')
+      showSnack('Proprietário excluído.', 'info')
     } catch (e) {
       showErro(e)
     } finally {
       setConfirmDeleteCliente(null)
+    }
+  }
+
+  const handleAddLocatario = async (values: Omit<Locatario, 'id'>) => {
+    try {
+      const novo = await insertLocatario({
+        nome: values.nome.trim(),
+        telefone: values.telefone.trim(),
+        email: values.email.trim(),
+      })
+      setLocatarios((prev) => [...prev, novo])
+      showSnack('Locatário adicionado.')
+    } catch (e) {
+      showErro(e)
+    }
+  }
+
+  const handleUpdateLocatario = async (
+    id: number,
+    changes: Partial<Pick<Locatario, 'nome' | 'telefone' | 'email'>>,
+  ) => {
+    try {
+      const atualizado = await updateLocatario(id, changes)
+      setLocatarios((prev) => prev.map((l) => (l.id === id ? atualizado : l)))
+      const locacoesAtualizadas = await updateLocacoesByLocatario(id, {
+        nome_locatario: atualizado.nome,
+        telefone_locatario: atualizado.telefone,
+        email_locatario: atualizado.email,
+      })
+      if (locacoesAtualizadas.length > 0) {
+        const porId = new Map(locacoesAtualizadas.map((l) => [l.id, l]))
+        setLocacoes((prev) => prev.map((l) => porId.get(l.id) ?? l))
+      }
+      showSnack('Locatário atualizado.')
+    } catch (e) {
+      showErro(e)
+    }
+  }
+
+  const handleDeleteLocatarioRequest = (l: Locatario) => setConfirmDeleteLocatario(l)
+
+  const handleDeleteLocatarioConfirm = async () => {
+    if (!confirmDeleteLocatario) return
+    try {
+      await deleteLocatario(confirmDeleteLocatario.id)
+      setLocatarios((prev) => prev.filter((l) => l.id !== confirmDeleteLocatario.id))
+      showSnack('Locatário excluído.', 'info')
+    } catch (e) {
+      showErro(e)
+    } finally {
+      setConfirmDeleteLocatario(null)
     }
   }
 
@@ -413,7 +477,8 @@ export default function App() {
               options={[
                 { value: 'imoveis', label: 'Imóveis', icon: HomeWorkOutlinedIcon },
                 { value: 'relatorios', label: 'Relatórios', icon: AssessmentOutlinedIcon },
-                { value: 'clientes', label: 'Clientes', icon: PeopleAltOutlinedIcon },
+                { value: 'clientes', label: 'Proprietários', icon: PeopleAltOutlinedIcon },
+                { value: 'locatarios', label: 'Locatários', icon: PersonOutlineOutlinedIcon },
               ]}
             />
 
@@ -452,6 +517,16 @@ export default function App() {
                 onDelete={handleDeleteClienteRequest}
               />
             )}
+
+            {aba === 'locatarios' && (
+              <LocatariosTab
+                locacoes={locacoes}
+                locatarios={locatarios}
+                onAdd={handleAddLocatario}
+                onUpdate={handleUpdateLocatario}
+                onDelete={handleDeleteLocatarioRequest}
+              />
+            )}
           </Stack>
         </Container>
       )}
@@ -467,6 +542,7 @@ export default function App() {
         open={detalhesOpen}
         locacao={selected}
         clientes={clientes}
+        locatarios={locatarios}
         onClose={() => setDetalhesOpen(false)}
         onSave={handleSave}
       />
@@ -490,10 +566,10 @@ export default function App() {
       </Dialog>
 
       <Dialog open={!!confirmDeleteCliente} onClose={() => setConfirmDeleteCliente(null)}>
-        <DialogTitle>Excluir cliente</DialogTitle>
+        <DialogTitle>Excluir proprietário</DialogTitle>
         <DialogContent>
           <Typography>
-            Tem certeza que deseja excluir o cliente{' '}
+            Tem certeza que deseja excluir o proprietário{' '}
             {confirmDeleteCliente ? `"${confirmDeleteCliente.nome}"` : ''}? Imóveis já vinculados a ele
             mantêm o nome e telefone atuais, mas deixarão de aparecer no select de proprietários.
           </Typography>
@@ -503,6 +579,26 @@ export default function App() {
             Cancelar
           </Button>
           <Button size="large" color="error" variant="contained" onClick={handleDeleteClienteConfirm}>
+            Excluir
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={!!confirmDeleteLocatario} onClose={() => setConfirmDeleteLocatario(null)}>
+        <DialogTitle>Excluir locatário</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Tem certeza que deseja excluir o locatário{' '}
+            {confirmDeleteLocatario ? `"${confirmDeleteLocatario.nome}"` : ''}? Imóveis já vinculados a
+            ele mantêm o nome, telefone e email atuais, mas deixarão de aparecer no select de
+            locatários.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button size="large" onClick={() => setConfirmDeleteLocatario(null)}>
+            Cancelar
+          </Button>
+          <Button size="large" color="error" variant="contained" onClick={handleDeleteLocatarioConfirm}>
             Excluir
           </Button>
         </DialogActions>

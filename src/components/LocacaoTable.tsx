@@ -24,16 +24,17 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew'
 import HomeWorkOutlinedIcon from '@mui/icons-material/HomeWorkOutlined'
 import type { Locacao } from '../types'
 import {
+  calcularMesContratoAtual,
   contratoPertoDoFim,
   formatData,
-  formatMesAno,
   formatMoeda,
+  formatParcelaContrato,
   precisaReajuste,
   reajusteJaRevisado,
   valorAPagarProprietario,
   valorParcelaIptu,
 } from '../calc'
-import { brick, moss, amber, rose, inkSecondary } from '../theme'
+import { brick, moss, amber, rose, soft, inkSecondary } from '../theme'
 
 /**
  * Célula de valor monetário editável in-line. Tem fundo e borda sutis
@@ -150,7 +151,7 @@ export default function LocacaoTable({
     <Stack spacing={1}>
       {algumPertoDoFim && (
         <Stack direction="row" spacing={1} alignItems="center">
-          <Box sx={{ width: 12, height: 12, borderRadius: 0.75, bgcolor: rose, opacity: 0.55, flexShrink: 0 }} />
+          <Box sx={{ width: 12, height: 12, borderRadius: 0.75, bgcolor: rose, flexShrink: 0 }} />
           <Typography variant="caption" color="text.secondary">
             Contratos com 3 meses ou menos para o fim
           </Typography>
@@ -163,7 +164,7 @@ export default function LocacaoTable({
               <TableCell>Imóvel</TableCell>
               <TableCell>Locatário</TableCell>
               <TableCell>Proprietário</TableCell>
-              <TableCell>Mês/Ano</TableCell>
+              <TableCell>Tempo de contrato</TableCell>
               <TableCell align="right">Aluguel</TableCell>
               <TableCell align="right">Condomínio</TableCell>
               <TableCell align="right">IPTU (mensal)</TableCell>
@@ -173,7 +174,7 @@ export default function LocacaoTable({
               <TableCell align="right">Extras proprietário</TableCell>
               <TableCell align="right">A pagar ao proprietário</TableCell>
               <TableCell>Pagamentos</TableCell>
-              <TableCell>Situação</TableCell>
+              <TableCell>Revisão</TableCell>
               <TableCell align="right"></TableCell>
             </TableRow>
           </TableHead>
@@ -195,11 +196,13 @@ export default function LocacaoTable({
                 hover
                 sx={{
                   backgroundColor: pertoDoFim
-                    ? 'rgba(192,57,43,0.06)'
+                    ? 'rgba(192,57,43,0.18)'
                     : l.predinho === 1
                       ? 'rgba(166,71,43,0.045)'
                       : undefined,
+                  borderLeft: pertoDoFim ? `3px solid ${rose}` : '3px solid transparent',
                   transition: 'background-color 0.12s ease',
+                  '&:hover': { backgroundColor: pertoDoFim ? 'rgba(192,57,43,0.24)' : undefined },
                   '&:last-child td': { borderBottom: 0 },
                 }}
               >
@@ -228,8 +231,19 @@ export default function LocacaoTable({
                 <TableCell sx={{ fontSize: '0.85rem', ...abrirCellSx }} onClick={() => onOpen(l)}>
                   {l.nome_proprietario || '—'}
                 </TableCell>
-                <TableCell sx={{ fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
-                  {formatMesAno(l.mes_referencia)}
+                <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                  <Chip
+                    label={formatParcelaContrato(
+                      calcularMesContratoAtual(l.data_inicio_contrato, l.meses_contrato),
+                      l.meses_contrato,
+                    )}
+                    size="small"
+                    sx={{
+                      bgcolor: pertoDoFim ? rose : reajuste && !revisado ? amber : soft,
+                      color: pertoDoFim || (reajuste && !revisado) ? '#fff' : inkSecondary,
+                      '& .MuiChip-label': { fontSize: '0.85rem', px: 1.5, py: 0.5 },
+                    }}
+                  />
                 </TableCell>
                 <TableCell align="right">
                   <EditableMoneyCell
@@ -346,22 +360,13 @@ export default function LocacaoTable({
                 </TableCell>
                 <TableCell>
                   <Stack spacing={0.5}>
-                    <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap">
-                      <Chip
-                        label={l.ativo ? 'Ativo' : 'Inativo'}
-                        size="small"
-                        sx={{
-                          bgcolor: l.ativo ? moss : undefined,
-                          color: l.ativo ? '#fff' : undefined,
-                        }}
-                        variant={l.ativo ? 'filled' : 'outlined'}
-                      />
-                      {reajuste && !revisado && (
+                    {reajuste && !revisado && (
+                      <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap">
                         <Tooltip title="Contrato completou 12 meses — verificar reajuste">
                           <WarningAmberIcon fontSize="small" sx={{ color: amber }} />
                         </Tooltip>
-                      )}
-                    </Stack>
+                      </Stack>
+                    )}
                     {reajuste && (
                       <Tooltip
                         title={

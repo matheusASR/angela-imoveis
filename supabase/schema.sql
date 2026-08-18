@@ -32,6 +32,27 @@ create table if not exists public.clientes (
 alter table public.clientes add column if not exists banco text not null default '';
 alter table public.clientes add column if not exists agencia text not null default '';
 alter table public.clientes add column if not exists conta_corrente text not null default '';
+-- Chave PIX do proprietário: cadastrada/editada só na aba Proprietários e
+-- propagada (denormalizada) para locacoes.chave_pix_proprietario, mesmo
+-- esquema usado para banco/agência/conta_corrente acima.
+alter table public.clientes add column if not exists chave_pix text not null default '';
+
+create table if not exists public.locatarios (
+  id integer generated always as identity primary key,
+  nome text not null default '',
+  telefone text not null default '',
+  email text not null default '',
+  created_at timestamptz not null default now()
+);
+
+alter table public.locatarios enable row level security;
+
+drop policy if exists "authenticated_full_access" on public.locatarios;
+create policy "authenticated_full_access" on public.locatarios
+  for all
+  to authenticated
+  using (true)
+  with check (true);
 
 create table if not exists public.locacoes (
   id integer generated always as identity primary key,
@@ -102,6 +123,19 @@ alter table public.locacoes
   add constraint locacoes_imovel_mes_unique unique (imovel_id, mes_referencia);
 
 create index if not exists locacoes_imovel_id_idx on public.locacoes (imovel_id);
+
+-- Locatário vinculado ao imóvel, cadastrado/editado só na aba Locatários;
+-- telefone/email são denormalizados para locacoes (mesmo esquema do
+-- proprietário) e sincronizados quando editados lá.
+alter table public.locacoes add column if not exists id_locatario integer references public.locatarios (id) on delete set null;
+alter table public.locacoes add column if not exists telefone_locatario text not null default '';
+alter table public.locacoes add column if not exists email_locatario text not null default '';
+
+create index if not exists locacoes_id_locatario_idx on public.locacoes (id_locatario);
+
+-- Chave PIX do proprietário, denormalizada de clientes.chave_pix (ver
+-- comentário lá).
+alter table public.locacoes add column if not exists chave_pix_proprietario text not null default '';
 
 alter table public.clientes enable row level security;
 alter table public.locacoes enable row level security;

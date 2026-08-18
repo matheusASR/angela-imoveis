@@ -22,6 +22,7 @@ export interface NovoImovelValues {
   banco_proprietario: string
   agencia_proprietario: string
   conta_corrente_proprietario: string
+  chave_pix_proprietario: string
 }
 
 const emptyValues = { local: '', numero_ap: '', id_proprietario: '' as number | '' }
@@ -64,6 +65,7 @@ export default function NovoImovelDialog({
       banco_proprietario: cliente?.banco ?? '',
       agencia_proprietario: cliente?.agencia ?? '',
       conta_corrente_proprietario: cliente?.conta_corrente ?? '',
+      chave_pix_proprietario: cliente?.chave_pix ?? '',
     })
   }
 

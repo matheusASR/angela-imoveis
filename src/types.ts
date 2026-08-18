@@ -10,6 +10,10 @@ export interface Locacao {
   meio_pagamento: string
   dia_vencimento: string
   nome_locatario: string
+  telefone_locatario: string
+  email_locatario: string
+  /** Referência ao locatário cadastrado na aba Locatários. */
+  id_locatario: number | null
   data_pagamento_locatario: string
   valor_aluguel: number
   valor_adm: number
@@ -36,6 +40,7 @@ export interface Locacao {
   banco_proprietario: string
   agencia_proprietario: string
   conta_corrente_proprietario: string
+  chave_pix_proprietario: string
   predinho: 0 | 1
   data_inicio_contrato: string
   observacoes: string
@@ -60,11 +65,20 @@ export interface Cliente {
   banco: string
   agencia: string
   conta_corrente: string
+  chave_pix: string
+}
+
+export interface Locatario {
+  id: number
+  nome: string
+  telefone: string
+  email: string
 }
 
 export interface AppData {
   locacoes: Locacao[]
   clientes: Cliente[]
+  locatarios: Locatario[]
 }
 
 export const MEIOS_PAGAMENTO = ['DEPÓSITO', 'LOCAL', 'PIX'] as const
@@ -84,6 +98,9 @@ export const novaLocacaoPadrao = (): Omit<Locacao, 'id' | 'imovel_id'> => ({
   meio_pagamento: '',
   dia_vencimento: '',
   nome_locatario: '',
+  telefone_locatario: '',
+  email_locatario: '',
+  id_locatario: null,
   data_pagamento_locatario: '',
   valor_aluguel: 0,
   valor_adm: 0,
@@ -105,6 +122,7 @@ export const novaLocacaoPadrao = (): Omit<Locacao, 'id' | 'imovel_id'> => ({
   banco_proprietario: '',
   agencia_proprietario: '',
   conta_corrente_proprietario: '',
+  chave_pix_proprietario: '',
   predinho: 0,
   data_inicio_contrato: '',
   observacoes: '',

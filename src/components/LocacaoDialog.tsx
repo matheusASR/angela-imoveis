@@ -18,7 +18,7 @@ import {
   ToggleButton,
   MenuItem,
 } from '@mui/material'
-import type { Cliente, FormaPagamento, Locacao } from '../types'
+import type { Cliente, FormaPagamento, Locacao, Locatario } from '../types'
 import { MEIOS_PAGAMENTO } from '../types'
 import {
   calcValorAdm,
@@ -39,12 +39,14 @@ export default function LocacaoDialog({
   open,
   locacao,
   clientes,
+  locatarios,
   onClose,
   onSave,
 }: {
   open: boolean
   locacao: Locacao | null
   clientes: Cliente[]
+  locatarios: Locatario[]
   onClose: () => void
   onSave: (l: Locacao) => void
 }) {
@@ -223,7 +225,41 @@ export default function LocacaoDialog({
             </Typography>
             <Grid container spacing={1.5}>
               <Grid item xs={12} sm={5}>
-                {txtField('Nome do locatário', 'nome_locatario')}
+                <TextField
+                  select
+                  label="Locatário"
+                  fullWidth
+                  size="small"
+                  value={form.id_locatario ?? ''}
+                  onChange={(e) => {
+                    const id = e.target.value === '' ? null : Number(e.target.value)
+                    const locatario = locatarios.find((loc) => loc.id === id)
+                    setForm((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            id_locatario: id,
+                            nome_locatario: locatario?.nome ?? '',
+                            telefone_locatario: locatario?.telefone ?? '',
+                            email_locatario: locatario?.email ?? '',
+                          }
+                        : prev,
+                    )
+                  }}
+                >
+                  <MenuItem value="">
+                    <em>—</em>
+                  </MenuItem>
+                  {form.id_locatario != null &&
+                    !locatarios.some((loc) => loc.id === form.id_locatario) && (
+                      <MenuItem value={form.id_locatario}>{form.nome_locatario} (não cadastrado)</MenuItem>
+                    )}
+                  {locatarios.map((loc) => (
+                    <MenuItem key={loc.id} value={loc.id}>
+                      {loc.nome}
+                    </MenuItem>
+                  ))}
+                </TextField>
               </Grid>
               <Grid item xs={12} sm={3}>
                 <TextField
@@ -246,6 +282,26 @@ export default function LocacaoDialog({
               </Grid>
               <Grid item xs={12} sm={4}>
                 {txtField('Dia de vencimento', 'dia_vencimento')}
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Telefone do locatário"
+                  fullWidth
+                  size="small"
+                  disabled
+                  value={form.telefone_locatario || 'Sem telefone cadastrado'}
+                  helperText="Editável na aba Locatários"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Email do locatário"
+                  fullWidth
+                  size="small"
+                  disabled
+                  value={form.email_locatario || 'Sem email cadastrado'}
+                  helperText="Editável na aba Locatários"
+                />
               </Grid>
               <Grid item xs={12} sm={6}>
                 {dateField('Data de pagamento (locatário)', 'data_pagamento_locatario')}
@@ -366,6 +422,7 @@ export default function LocacaoDialog({
                             banco_proprietario: cliente?.banco ?? '',
                             agencia_proprietario: cliente?.agencia ?? '',
                             conta_corrente_proprietario: cliente?.conta_corrente ?? '',
+                            chave_pix_proprietario: cliente?.chave_pix ?? '',
                           }
                         : prev,
                     )
@@ -389,7 +446,7 @@ export default function LocacaoDialog({
                   size="small"
                   disabled
                   value={form.telefone_proprietario || 'Sem telefone cadastrado'}
-                  helperText="Editável na aba Clientes"
+                  helperText="Editável na aba Proprietários"
                 />
               </Grid>
               <Grid item xs={12} sm={4}>
@@ -399,7 +456,7 @@ export default function LocacaoDialog({
                   size="small"
                   disabled
                   value={form.banco_proprietario || '—'}
-                  helperText="Editável na aba Clientes"
+                  helperText="Editável na aba Proprietários"
                 />
               </Grid>
               <Grid item xs={12} sm={4}>
@@ -409,7 +466,7 @@ export default function LocacaoDialog({
                   size="small"
                   disabled
                   value={form.agencia_proprietario || '—'}
-                  helperText="Editável na aba Clientes"
+                  helperText="Editável na aba Proprietários"
                 />
               </Grid>
               <Grid item xs={12} sm={4}>
@@ -419,7 +476,17 @@ export default function LocacaoDialog({
                   size="small"
                   disabled
                   value={form.conta_corrente_proprietario || '—'}
-                  helperText="Editável na aba Clientes"
+                  helperText="Editável na aba Proprietários"
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  label="Chave PIX"
+                  fullWidth
+                  size="small"
+                  disabled
+                  value={form.chave_pix_proprietario || '—'}
+                  helperText="Editável na aba Proprietários"
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -471,15 +538,6 @@ export default function LocacaoDialog({
                   )}
                   disabled
                   helperText="Calculado a partir da data de início"
-                />
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <FormControlLabel
-                  sx={{ mt: 0.5 }}
-                  control={
-                    <Switch checked={form.ativo} onChange={(e) => update('ativo', e.target.checked)} />
-                  }
-                  label="Contrato ativo"
                 />
               </Grid>
               {alertaReajuste && (

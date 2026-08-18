@@ -1,17 +1,20 @@
-import type { AppData, Cliente, Locacao } from './types'
+import type { AppData, Cliente, Locacao, Locatario } from './types'
 import { supabase } from './lib/supabaseClient'
 import { mesAtualISO, mesesFaltantes } from './calc'
 
 export async function fetchAppData(): Promise<AppData> {
-  const [locacoesRes, clientesRes] = await Promise.all([
+  const [locacoesRes, clientesRes, locatariosRes] = await Promise.all([
     supabase.from('locacoes').select('*').eq('mes_referencia', mesAtualISO()).order('id'),
     supabase.from('clientes').select('*').order('nome'),
+    supabase.from('locatarios').select('*').order('nome'),
   ])
   if (locacoesRes.error) throw locacoesRes.error
   if (clientesRes.error) throw clientesRes.error
+  if (locatariosRes.error) throw locatariosRes.error
   return {
     locacoes: (locacoesRes.data ?? []) as Locacao[],
     clientes: (clientesRes.data ?? []) as Cliente[],
+    locatarios: (locatariosRes.data ?? []) as Locatario[],
   }
 }
 
@@ -60,6 +63,7 @@ export async function updateLocacoesByProprietario(
       | 'banco_proprietario'
       | 'agencia_proprietario'
       | 'conta_corrente_proprietario'
+      | 'chave_pix_proprietario'
     >
   >,
 ): Promise<Locacao[]> {
@@ -67,6 +71,25 @@ export async function updateLocacoesByProprietario(
     .from('locacoes')
     .update(changes)
     .eq('id_proprietario', idProprietario)
+    .eq('mes_referencia', mesAtualISO())
+    .select()
+  if (error) throw error
+  return (data ?? []) as Locacao[]
+}
+
+/**
+ * Propaga nome/telefone/email de um locatário para os imóveis vinculados a
+ * ele — mesma lógica de `updateLocacoesByProprietario`, mas para o
+ * locatário (ver comentário lá).
+ */
+export async function updateLocacoesByLocatario(
+  idLocatario: number,
+  changes: Partial<Pick<Locacao, 'nome_locatario' | 'telefone_locatario' | 'email_locatario'>>,
+): Promise<Locacao[]> {
+  const { data, error } = await supabase
+    .from('locacoes')
+    .update(changes)
+    .eq('id_locatario', idLocatario)
     .eq('mes_referencia', mesAtualISO())
     .select()
   if (error) throw error
@@ -142,5 +165,22 @@ export async function updateCliente(id: number, changes: Partial<Omit<Cliente, '
 
 export async function deleteCliente(id: number): Promise<void> {
   const { error } = await supabase.from('clientes').delete().eq('id', id)
+  if (error) throw error
+}
+
+export async function insertLocatario(values: Omit<Locatario, 'id'>): Promise<Locatario> {
+  const { data, error } = await supabase.from('locatarios').insert(values).select().single()
+  if (error) throw error
+  return data as Locatario
+}
+
+export async function updateLocatario(id: number, changes: Partial<Omit<Locatario, 'id'>>): Promise<Locatario> {
+  const { data, error } = await supabase.from('locatarios').update(changes).eq('id', id).select().single()
+  if (error) throw error
+  return data as Locatario
+}
+
+export async function deleteLocatario(id: number): Promise<void> {
+  const { error } = await supabase.from('locatarios').delete().eq('id', id)
   if (error) throw error
 }

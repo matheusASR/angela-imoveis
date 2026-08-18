@@ -22,38 +22,38 @@ import {
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
-import type { Cliente, Locacao } from '../types'
+import type { Locacao, Locatario } from '../types'
 
-function imoveisDoCliente(cliente: Cliente, locacoes: Locacao[]): string[] {
-  const chave = cliente.nome.trim().toLowerCase()
+function imoveisDoLocatario(locatario: Locatario, locacoes: Locacao[]): string[] {
+  const chave = locatario.nome.trim().toLowerCase()
   return locacoes
     .filter(
       (l) =>
-        l.id_proprietario === cliente.id ||
-        (l.id_proprietario == null && l.nome_proprietario.trim().toLowerCase() === chave),
+        l.id_locatario === locatario.id ||
+        (l.id_locatario == null && l.nome_locatario.trim().toLowerCase() === chave),
     )
     .map((l) => `${l.local || 'Sem endereço'}${l.numero_ap ? ' - Apto ' + l.numero_ap : ''}`)
 }
 
 function EditableCell({
-  cliente,
+  locatario,
   campo,
   placeholder,
   onSave,
   minWidth = 170,
 }: {
-  cliente: Cliente
-  campo: keyof Pick<Cliente, 'telefone' | 'banco' | 'agencia' | 'conta_corrente' | 'chave_pix'>
+  locatario: Locatario
+  campo: keyof Pick<Locatario, 'telefone' | 'email'>
   placeholder: string
-  onSave: (id: number, changes: Partial<Cliente>) => void
+  onSave: (id: number, changes: Partial<Locatario>) => void
   minWidth?: number
 }) {
-  const [valor, setValor] = useState(cliente[campo])
+  const [valor, setValor] = useState(locatario[campo])
   const [editando, setEditando] = useState(false)
 
   const commit = () => {
     setEditando(false)
-    if (valor !== cliente[campo]) onSave(cliente.id, { [campo]: valor })
+    if (valor !== locatario[campo]) onSave(locatario.id, { [campo]: valor })
   }
 
   return (
@@ -74,30 +74,24 @@ function EditableCell({
   )
 }
 
-function NovoClienteDialog({
+function NovoLocatarioDialog({
   open,
   onClose,
   onSave,
 }: {
   open: boolean
   onClose: () => void
-  onSave: (values: Omit<Cliente, 'id'>) => void
+  onSave: (values: Omit<Locatario, 'id'>) => void
 }) {
   const [nome, setNome] = useState('')
   const [telefone, setTelefone] = useState('')
-  const [banco, setBanco] = useState('')
-  const [agencia, setAgencia] = useState('')
-  const [contaCorrente, setContaCorrente] = useState('')
-  const [chavePix, setChavePix] = useState('')
+  const [email, setEmail] = useState('')
   const [erro, setErro] = useState('')
 
   const handleClose = () => {
     setNome('')
     setTelefone('')
-    setBanco('')
-    setAgencia('')
-    setContaCorrente('')
-    setChavePix('')
+    setEmail('')
     setErro('')
     onClose()
   }
@@ -107,24 +101,17 @@ function NovoClienteDialog({
       setErro('Campo obrigatório')
       return
     }
-    onSave({
-      nome,
-      telefone,
-      banco,
-      agencia,
-      conta_corrente: contaCorrente,
-      chave_pix: chavePix,
-    })
+    onSave({ nome, telefone, email })
     handleClose()
   }
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Adicionar proprietário</DialogTitle>
+      <DialogTitle>Adicionar locatário</DialogTitle>
       <DialogContent>
         <Stack spacing={2.5} sx={{ pt: 0.5 }}>
           <TextField
-            label="Nome do proprietário"
+            label="Nome do locatário"
             fullWidth
             autoFocus
             value={nome}
@@ -138,30 +125,7 @@ function NovoClienteDialog({
             value={telefone}
             onChange={(e) => setTelefone(e.target.value)}
           />
-          <TextField
-            label="Banco"
-            fullWidth
-            value={banco}
-            onChange={(e) => setBanco(e.target.value)}
-          />
-          <TextField
-            label="Agência"
-            fullWidth
-            value={agencia}
-            onChange={(e) => setAgencia(e.target.value)}
-          />
-          <TextField
-            label="Conta corrente"
-            fullWidth
-            value={contaCorrente}
-            onChange={(e) => setContaCorrente(e.target.value)}
-          />
-          <TextField
-            label="Chave PIX"
-            fullWidth
-            value={chavePix}
-            onChange={(e) => setChavePix(e.target.value)}
-          />
+          <TextField label="Email" fullWidth value={email} onChange={(e) => setEmail(e.target.value)} />
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2.5 }}>
@@ -176,29 +140,24 @@ function NovoClienteDialog({
   )
 }
 
-export default function ClientesTab({
+export default function LocatariosTab({
   locacoes,
-  clientes,
+  locatarios,
   onAdd,
   onUpdate,
   onDelete,
 }: {
   locacoes: Locacao[]
-  clientes: Cliente[]
-  onAdd: (values: Omit<Cliente, 'id'>) => void
-  onUpdate: (
-    id: number,
-    changes: Partial<
-      Pick<Cliente, 'nome' | 'telefone' | 'banco' | 'agencia' | 'conta_corrente' | 'chave_pix'>
-    >,
-  ) => void
-  onDelete: (cliente: Cliente) => void
+  locatarios: Locatario[]
+  onAdd: (values: Omit<Locatario, 'id'>) => void
+  onUpdate: (id: number, changes: Partial<Pick<Locatario, 'nome' | 'telefone' | 'email'>>) => void
+  onDelete: (locatario: Locatario) => void
 }) {
   const [novoOpen, setNovoOpen] = useState(false)
 
-  const clientesOrdenados = useMemo(
-    () => [...clientes].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')),
-    [clientes],
+  const locatariosOrdenados = useMemo(
+    () => [...locatarios].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')),
+    [locatarios],
   )
 
   return (
@@ -207,18 +166,17 @@ export default function ClientesTab({
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'center' }}>
           <Box sx={{ flex: 1 }}>
             <Typography sx={{ fontSize: '1.1rem' }}>
-              <strong>{clientes.length}</strong> proprietário{clientes.length === 1 ? '' : 's'} cadastrado
-              {clientes.length === 1 ? '' : 's'}
+              <strong>{locatarios.length}</strong> locatário{locatarios.length === 1 ? '' : 's'}{' '}
+              cadastrado{locatarios.length === 1 ? '' : 's'}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              Edite telefone, banco, agência, conta corrente e chave PIX diretamente na tabela.
-              Proprietários cadastrados aqui ficam disponíveis no select de proprietário ao criar
-              ou editar um imóvel — os dados bancários são preenchidos automaticamente lá e só
-              podem ser editados aqui.
+              Edite telefone e email diretamente na tabela. Locatários cadastrados aqui ficam
+              disponíveis no select de locatário ao editar um imóvel — telefone e email são
+              preenchidos automaticamente lá e só podem ser editados aqui.
             </Typography>
           </Box>
           <Button variant="contained" startIcon={<AddIcon />} onClick={() => setNovoOpen(true)}>
-            Adicionar proprietário
+            Adicionar locatário
           </Button>
         </Stack>
       </Paper>
@@ -227,32 +185,29 @@ export default function ClientesTab({
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Proprietário</TableCell>
+              <TableCell>Locatário</TableCell>
               <TableCell>Telefone</TableCell>
-              <TableCell>Banco</TableCell>
-              <TableCell>Agência</TableCell>
-              <TableCell>Conta corrente</TableCell>
-              <TableCell>Chave PIX</TableCell>
+              <TableCell>Email</TableCell>
               <TableCell>Imóveis</TableCell>
               <TableCell align="right"></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {clientesOrdenados.length === 0 ? (
+            {locatariosOrdenados.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
-                  <Typography color="text.secondary">Nenhum proprietário cadastrado.</Typography>
+                <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+                  <Typography color="text.secondary">Nenhum locatário cadastrado.</Typography>
                 </TableCell>
               </TableRow>
             ) : (
-              clientesOrdenados.map((c) => {
-                const imoveis = imoveisDoCliente(c, locacoes)
+              locatariosOrdenados.map((loc) => {
+                const imoveis = imoveisDoLocatario(loc, locacoes)
                 return (
-                  <TableRow key={c.id} hover>
-                    <TableCell sx={{ fontWeight: 600 }}>{c.nome}</TableCell>
+                  <TableRow key={loc.id} hover>
+                    <TableCell sx={{ fontWeight: 600 }}>{loc.nome}</TableCell>
                     <TableCell>
                       <EditableCell
-                        cliente={c}
+                        locatario={loc}
                         campo="telefone"
                         placeholder="Adicionar telefone…"
                         onSave={onUpdate}
@@ -260,38 +215,11 @@ export default function ClientesTab({
                     </TableCell>
                     <TableCell>
                       <EditableCell
-                        cliente={c}
-                        campo="banco"
-                        placeholder="Adicionar banco…"
+                        locatario={loc}
+                        campo="email"
+                        placeholder="Adicionar email…"
                         onSave={onUpdate}
-                        minWidth={120}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <EditableCell
-                        cliente={c}
-                        campo="agencia"
-                        placeholder="Adicionar agência…"
-                        onSave={onUpdate}
-                        minWidth={110}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <EditableCell
-                        cliente={c}
-                        campo="conta_corrente"
-                        placeholder="Adicionar conta…"
-                        onSave={onUpdate}
-                        minWidth={130}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <EditableCell
-                        cliente={c}
-                        campo="chave_pix"
-                        placeholder="Adicionar chave PIX…"
-                        onSave={onUpdate}
-                        minWidth={150}
+                        minWidth={200}
                       />
                     </TableCell>
                     <TableCell>
@@ -308,8 +236,8 @@ export default function ClientesTab({
                       </Box>
                     </TableCell>
                     <TableCell align="right">
-                      <Tooltip title="Excluir proprietário">
-                        <IconButton size="small" onClick={() => onDelete(c)}>
+                      <Tooltip title="Excluir locatário">
+                        <IconButton size="small" onClick={() => onDelete(loc)}>
                           <DeleteOutlineIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
@@ -322,7 +250,7 @@ export default function ClientesTab({
         </Table>
       </TableContainer>
 
-      <NovoClienteDialog open={novoOpen} onClose={() => setNovoOpen(false)} onSave={onAdd} />
+      <NovoLocatarioDialog open={novoOpen} onClose={() => setNovoOpen(false)} onSave={onAdd} />
     </Stack>
   )
 }

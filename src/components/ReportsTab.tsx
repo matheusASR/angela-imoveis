@@ -5,8 +5,6 @@ import {
   Typography,
   TextField,
   Button,
-  FormControlLabel,
-  Checkbox,
   Table,
   TableHead,
   TableBody,
@@ -80,7 +78,6 @@ export default function ReportsTab() {
   const [mesAno, setMesAno] = useState(
     `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`,
   )
-  const [somenteAtivos, setSomenteAtivos] = useState(true)
 
   const [ano, mesNum] = mesAno.split('-').map(Number)
   const nomeMes = MESES_PT[(mesNum || 1) - 1] ?? ''
@@ -110,10 +107,8 @@ export default function ReportsTab() {
     }
   }, [mesAno])
 
-  const base = useMemo(
-    () => (somenteAtivos ? locacoesMes.filter((l) => l.ativo) : locacoesMes),
-    [locacoesMes, somenteAtivos],
-  )
+  // O relatório sempre exporta somente os contratos ativos.
+  const base = useMemo(() => locacoesMes.filter((l) => l.ativo), [locacoesMes])
 
   const linhas = useMemo(
     () => montarLinhas(base, ano || hoje.getFullYear(), mesNum || hoje.getMonth() + 1),
@@ -179,7 +174,7 @@ export default function ReportsTab() {
 </head>
 <body>
   <h1>Angela Imóveis — ${escapeHtml(tituloRelatorio)}</h1>
-  <p class="subtitulo">${linhas.length} imóve${linhas.length === 1 ? 'l' : 'is'}${somenteAtivos ? ' ativo(s)' : ''} — gerado em ${new Date().toLocaleDateString('pt-BR')}</p>
+  <p class="subtitulo">${linhas.length} imóve${linhas.length === 1 ? 'l' : 'is'} ativo(s) — gerado em ${new Date().toLocaleDateString('pt-BR')}</p>
   <table>
     <thead>
       <tr>
@@ -228,7 +223,7 @@ export default function ReportsTab() {
     doc.setFontSize(9)
     doc.setTextColor(90)
     doc.text(
-      `${linhas.length} imóve${linhas.length === 1 ? 'l' : 'is'}${somenteAtivos ? ' ativo(s)' : ''} — gerado em ${new Date().toLocaleDateString('pt-BR')}`,
+      `${linhas.length} imóve${linhas.length === 1 ? 'l' : 'is'} ativo(s) — gerado em ${new Date().toLocaleDateString('pt-BR')}`,
       32,
       48,
     )
@@ -295,15 +290,6 @@ export default function ReportsTab() {
               onChange={(e) => setMesAno(e.target.value)}
               InputLabelProps={{ shrink: true }}
               sx={{ maxWidth: 220 }}
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={somenteAtivos}
-                  onChange={(e) => setSomenteAtivos(e.target.checked)}
-                />
-              }
-              label="Somente contratos ativos"
             />
             <Box sx={{ flex: 1 }} />
             {/* <Button

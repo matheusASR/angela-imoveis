@@ -69,6 +69,12 @@ export function precisaReajuste(data_inicio_contrato: string): boolean {
   return meses >= 12
 }
 
+/** Normaliza texto para comparação de busca: minúsculas e sem acentuação. */
+const DIACRITICOS = /[̀-ͯ]/g
+export function normalizarBusca(v: string): string {
+  return v.normalize('NFD').replace(DIACRITICOS, '').toLowerCase()
+}
+
 export function formatMoeda(valor: number): string {
   return (Number(valor) || 0).toLocaleString('pt-BR', {
     style: 'currency',
