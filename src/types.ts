@@ -84,9 +84,11 @@ export interface AppData {
 export const MEIOS_PAGAMENTO = ['DEPÓSITO', 'LOCAL', 'PIX'] as const
 export type FiltroTipo =
   | 'todos'
-  | 'ativos'
   | 'predinho'
-  | 'pendentes'
+  | 'perto_fim'
+  | 'locatarios_pendentes'
+  | 'proprietarios_pendentes'
+  | 'reajustes_pendentes'
 
 /**
  * Valores padrão para um novo imóvel — sem "id" nem "imovel_id", ambos

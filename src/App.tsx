@@ -40,7 +40,14 @@ import {
   deleteLocatario,
   updateLocacoesByLocatario,
 } from './storage'
-import { calcValorAdm, normalizarBusca, precisaReajuste, reajusteJaRevisado, hojeISO } from './calc'
+import {
+  calcValorAdm,
+  contratoPertoDoFim,
+  normalizarBusca,
+  precisaReajuste,
+  reajusteJaRevisado,
+  hojeISO,
+} from './calc'
 import { supabase } from './lib/supabaseClient'
 import { useSession } from './hooks/useSession'
 import { appBarShadow } from './theme'
@@ -145,29 +152,29 @@ export default function App() {
       )
     }
 
-    if (filtro === 'pendentes') {
-      // Reajuste só conta como pendência se ainda não foi revisado, ou se
-      // foi revisado mas os pagamentos do locatário/proprietário daquele
-      // ciclo ainda não foram registrados — uma vez revisado e com ambos os
-      // pagamentos feitos, o caso sai desta aba.
-      list = list.filter((l) => {
-        const reajustePendente =
-          precisaReajuste(l.data_inicio_contrato) &&
-          !(
-            reajusteJaRevisado(l.data_inicio_contrato, l.data_revisao_reajuste) &&
-            l.data_pagamento_locatario &&
-            l.data_pagamento_proprietario
-          )
-        return !l.data_pagamento_locatario || reajustePendente
-      })
-    }
-
     if (filtro === 'predinho') {
       list = list.filter((l) => l.predinho === 1)
     }
 
-    if (filtro === 'ativos') {
-      list = list.filter((l) => l.ativo)
+    if (filtro === 'perto_fim') {
+      list = list.filter((l) => l.ativo && contratoPertoDoFim(l.data_inicio_contrato, l.meses_contrato))
+    }
+
+    if (filtro === 'locatarios_pendentes') {
+      list = list.filter((l) => l.ativo && !l.data_pagamento_locatario)
+    }
+
+    if (filtro === 'proprietarios_pendentes') {
+      list = list.filter((l) => l.ativo && !l.data_pagamento_proprietario)
+    }
+
+    if (filtro === 'reajustes_pendentes') {
+      list = list.filter(
+        (l) =>
+          l.ativo &&
+          precisaReajuste(l.data_inicio_contrato) &&
+          !reajusteJaRevisado(l.data_inicio_contrato, l.data_revisao_reajuste),
+      )
     }
 
     return list
@@ -484,15 +491,9 @@ export default function App() {
 
             {aba === 'imoveis' && (
               <Stack spacing={2}>
-                <HomeSummary locacoes={locacoes} />
+                <HomeSummary locacoes={locacoes} filtro={filtro} onFiltroChange={setFiltro} />
 
-                <AppToolbar
-                  query={query}
-                  onQueryChange={setQuery}
-                  filtro={filtro}
-                  onFiltroChange={setFiltro}
-                  onNovo={handleNovo}
-                />
+                <AppToolbar query={query} onQueryChange={setQuery} onNovo={handleNovo} />
 
                 <LocacaoTable
                   locacoes={filtered}

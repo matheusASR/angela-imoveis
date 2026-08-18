@@ -1,26 +1,14 @@
-import {
-  Stack,
-  TextField,
-  ToggleButton,
-  ToggleButtonGroup,
-  Button,
-  InputAdornment,
-} from '@mui/material'
+import { Stack, TextField, Button, InputAdornment } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
 import AddIcon from '@mui/icons-material/Add'
-import type { FiltroTipo } from '../types'
 
 export default function AppToolbar({
   query,
   onQueryChange,
-  filtro,
-  onFiltroChange,
   onNovo,
 }: {
   query: string
   onQueryChange: (v: string) => void
-  filtro: FiltroTipo
-  onFiltroChange: (v: FiltroTipo) => void
   onNovo: () => void
 }) {
   return (
@@ -39,18 +27,6 @@ export default function AppToolbar({
           ),
         }}
       />
-
-      <ToggleButtonGroup
-        size="small"
-        exclusive
-        value={filtro}
-        onChange={(_, v) => v && onFiltroChange(v)}
-        sx={{ flexWrap: 'wrap' }}
-      >
-        <ToggleButton value="todos">Todos</ToggleButton>
-        <ToggleButton value="pendentes">Precisam de atenção</ToggleButton>
-        <ToggleButton value="predinho">PREDINHO</ToggleButton>
-      </ToggleButtonGroup>
 
       <Stack sx={{ flex: 1 }} />
 

@@ -7,7 +7,7 @@ import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalance
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined'
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined'
 import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined'
-import type { Locacao } from '../types'
+import type { FiltroTipo, Locacao } from '../types'
 import {
   contratoPertoDoFim,
   formatMesAno,
@@ -17,23 +17,49 @@ import {
 } from '../calc'
 import { brick, moss, amber, rose, inkSecondary, ink } from '../theme'
 
+/**
+ * Cada card também funciona como um toggle de filtro da tabela de imóveis:
+ * clicar aplica o filtro correspondente, clicar de novo (no mesmo já ativo)
+ * volta para "todos".
+ */
 function StatItem({
   icon,
   label,
   value,
   accent,
+  active,
+  onClick,
 }: {
   icon: React.ReactNode
   label: string
   value: string | number
   accent: string
+  active: boolean
+  onClick: () => void
 }) {
   return (
     <Stack
+      component="button"
+      type="button"
+      onClick={onClick}
       direction="row"
       spacing={1.5}
       alignItems="center"
-      sx={{ flex: '1 1 200px', minWidth: 180 }}
+      sx={{
+        flex: '1 1 200px',
+        minWidth: 180,
+        border: 0,
+        p: 1,
+        m: -1,
+        borderRadius: 2.5,
+        bgcolor: active ? `${accent}18` : 'transparent',
+        boxShadow: active ? `inset 0 0 0 1.5px ${accent}` : 'inset 0 0 0 1px transparent',
+        cursor: 'pointer',
+        textAlign: 'left',
+        font: 'inherit',
+        transition: 'background-color 0.15s ease, box-shadow 0.15s ease',
+        '&:hover': { bgcolor: `${accent}0f` },
+      }}
     >
       <Box
         sx={{
@@ -62,7 +88,15 @@ function StatItem({
   )
 }
 
-export default function HomeSummary({ locacoes }: { locacoes: Locacao[] }) {
+export default function HomeSummary({
+  locacoes,
+  filtro,
+  onFiltroChange,
+}: {
+  locacoes: Locacao[]
+  filtro: FiltroTipo
+  onFiltroChange: (v: FiltroTipo) => void
+}) {
   const total = locacoes.length
   const predinho = locacoes.filter((l) => l.predinho === 1).length
   const pertoDoFim = locacoes.filter(
@@ -76,6 +110,8 @@ export default function HomeSummary({ locacoes }: { locacoes: Locacao[] }) {
       precisaReajuste(l.data_inicio_contrato) &&
       !reajusteJaRevisado(l.data_inicio_contrato, l.data_revisao_reajuste),
   ).length
+
+  const toggle = (v: FiltroTipo) => onFiltroChange(filtro === v ? 'todos' : v)
 
   return (
     <Stack spacing={1.25}>
@@ -111,6 +147,8 @@ export default function HomeSummary({ locacoes }: { locacoes: Locacao[] }) {
           label={`Imóve${total === 1 ? 'l' : 'is'} cadastrado${total === 1 ? '' : 's'}`}
           value={total}
           accent={ink}
+          active={filtro === 'todos'}
+          onClick={() => onFiltroChange('todos')}
         />
 
         <Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', sm: 'block' } }} />
@@ -120,6 +158,8 @@ export default function HomeSummary({ locacoes }: { locacoes: Locacao[] }) {
           label="PREDINHO"
           value={predinho}
           accent={brick}
+          active={filtro === 'predinho'}
+          onClick={() => toggle('predinho')}
         />
 
         <Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', sm: 'block' } }} />
@@ -129,6 +169,8 @@ export default function HomeSummary({ locacoes }: { locacoes: Locacao[] }) {
           label="Com 3 meses ou menos para o fim"
           value={pertoDoFim}
           accent={rose}
+          active={filtro === 'perto_fim'}
+          onClick={() => toggle('perto_fim')}
         />
 
         <Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', sm: 'block' } }} />
@@ -138,6 +180,8 @@ export default function HomeSummary({ locacoes }: { locacoes: Locacao[] }) {
           label="Locatários sem pagamento"
           value={locatariosPendentes}
           accent={amber}
+          active={filtro === 'locatarios_pendentes'}
+          onClick={() => toggle('locatarios_pendentes')}
         />
 
         <Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', sm: 'block' } }} />
@@ -147,6 +191,8 @@ export default function HomeSummary({ locacoes }: { locacoes: Locacao[] }) {
           label="Proprietários a pagar"
           value={proprietariosPendentes}
           accent={amber}
+          active={filtro === 'proprietarios_pendentes'}
+          onClick={() => toggle('proprietarios_pendentes')}
         />
 
         <Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', sm: 'block' } }} />
@@ -157,9 +203,18 @@ export default function HomeSummary({ locacoes }: { locacoes: Locacao[] }) {
             label="Reajustes IPCA/IGP-M pendentes"
             value={reajustesPendentes}
             accent={amber}
+            active={filtro === 'reajustes_pendentes'}
+            onClick={() => toggle('reajustes_pendentes')}
           />
         ) : (
-          <StatItem icon={<CheckCircleOutlinedIcon fontSize="small" />} label="Reajustes em dia" value="✓" accent={moss} />
+          <StatItem
+            icon={<CheckCircleOutlinedIcon fontSize="small" />}
+            label="Reajustes em dia"
+            value="✓"
+            accent={moss}
+            active={filtro === 'reajustes_pendentes'}
+            onClick={() => toggle('reajustes_pendentes')}
+          />
         )}
       </Paper>
     </Stack>
