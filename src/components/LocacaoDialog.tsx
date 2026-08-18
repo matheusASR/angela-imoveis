@@ -18,6 +18,7 @@ import {
   ToggleButton,
   MenuItem,
 } from '@mui/material'
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import type { Cliente, FormaPagamento, Locacao, Locatario } from '../types'
 import { MEIOS_PAGAMENTO } from '../types'
 import {
@@ -42,6 +43,7 @@ export default function LocacaoDialog({
   locatarios,
   onClose,
   onSave,
+  onDeleteRequest,
 }: {
   open: boolean
   locacao: Locacao | null
@@ -49,6 +51,7 @@ export default function LocacaoDialog({
   locatarios: Locatario[]
   onClose: () => void
   onSave: (l: Locacao) => void
+  onDeleteRequest: (l: Locacao) => void
 }) {
   const [form, setForm] = useState<Locacao | null>(locacao)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -569,6 +572,15 @@ export default function LocacaoDialog({
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 2 }}>
+        <Button
+          size="large"
+          color="error"
+          startIcon={<DeleteOutlineIcon />}
+          onClick={() => onDeleteRequest(form)}
+          sx={{ mr: 'auto' }}
+        >
+          Excluir imóvel
+        </Button>
         <Button size="large" onClick={onClose}>
           Cancelar
         </Button>

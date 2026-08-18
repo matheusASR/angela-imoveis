@@ -25,6 +25,7 @@ import {
   formatParcelaIptu,
   parcelaIptuParaMes,
   valorAPagarProprietario,
+  valorAReceberLocatario,
 } from '../calc'
 import { fetchLocacoesPorMes } from '../storage'
 
@@ -42,6 +43,7 @@ type LinhaRelatorio = {
   multa: number
   taxaAdm: number
   extraProprietario: number
+  valorReceber: number
   valorPagar: number
 }
 
@@ -63,6 +65,7 @@ function montarLinhas(locacoes: Locacao[], ano: number, mes: number): LinhaRelat
     multa: l.valor_multa,
     taxaAdm: l.valor_adm,
     extraProprietario: l.valor_extra_proprietario,
+    valorReceber: valorAReceberLocatario(l),
     valorPagar: valorAPagarProprietario(l),
   }))
 }
@@ -122,6 +125,7 @@ export default function ReportsTab() {
       multa: linhas.reduce((s, l) => s + l.multa, 0),
       taxaAdm: linhas.reduce((s, l) => s + l.taxaAdm, 0),
       extraProprietario: linhas.reduce((s, l) => s + l.extraProprietario, 0),
+      valorReceber: linhas.reduce((s, l) => s + l.valorReceber, 0),
       valorPagar: linhas.reduce((s, l) => s + l.valorPagar, 0),
     }),
     [linhas],
@@ -147,6 +151,7 @@ export default function ReportsTab() {
         <td class="num">${formatMoeda(l.multa)}</td>
         <td class="num">${formatMoeda(l.taxaAdm)}</td>
         <td class="num">${formatMoeda(l.extraProprietario)}</td>
+        <td class="num">${formatMoeda(l.valorReceber)}</td>
         <td class="num total">${formatMoeda(l.valorPagar)}</td>
       </tr>`,
       )
@@ -177,7 +182,7 @@ export default function ReportsTab() {
       <tr>
         <th>Imóvel</th><th>Proprietário</th><th>Locatário</th><th>Tempo de contrato</th>
         <th>Aluguel</th><th>Condomínio</th><th>IPTU</th><th>Extras</th>
-        <th>Multa</th><th>Taxa ADM</th><th>Extra Prop.</th><th>A pagar ao proprietário</th>
+        <th>Multa</th><th>Taxa ADM</th><th>Extra Prop.</th><th>A receber do locatário</th><th>A pagar ao proprietário</th>
       </tr>
     </thead>
     <tbody>${linhasHtml}</tbody>
@@ -191,6 +196,7 @@ export default function ReportsTab() {
         <td class="num">${formatMoeda(totais.multa)}</td>
         <td class="num">${formatMoeda(totais.taxaAdm)}</td>
         <td class="num">${formatMoeda(totais.extraProprietario)}</td>
+        <td class="num">${formatMoeda(totais.valorReceber)}</td>
         <td class="num">${formatMoeda(totalPagar)}</td>
       </tr>
     </tfoot>
@@ -231,7 +237,7 @@ export default function ReportsTab() {
         [
           'Imóvel', 'Proprietário', 'Locatário', 'Tempo de contrato',
           'Aluguel', 'Condomínio', 'IPTU', 'Extras',
-          'Multa', 'Taxa ADM', 'Extra Prop.', 'A pagar',
+          'Multa', 'Taxa ADM', 'Extra Prop.', 'A receber', 'A pagar',
         ],
       ],
       body: linhas.map((l) => [
@@ -246,6 +252,7 @@ export default function ReportsTab() {
         formatMoeda(l.multa),
         formatMoeda(l.taxaAdm),
         formatMoeda(l.extraProprietario),
+        formatMoeda(l.valorReceber),
         formatMoeda(l.valorPagar),
       ]),
       foot: [
@@ -258,6 +265,7 @@ export default function ReportsTab() {
           formatMoeda(totais.multa),
           formatMoeda(totais.taxaAdm),
           formatMoeda(totais.extraProprietario),
+          formatMoeda(totais.valorReceber),
           formatMoeda(totalPagar),
         ],
       ],
@@ -328,19 +336,20 @@ export default function ReportsTab() {
               <TableCell align="right">Multa</TableCell>
               <TableCell align="right">Taxa ADM</TableCell>
               <TableCell align="right">Extra Prop.</TableCell>
+              <TableCell align="right">A receber do locatário</TableCell>
               <TableCell align="right">A pagar</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {carregando ? (
               <TableRow>
-                <TableCell colSpan={12} align="center" sx={{ py: 4 }}>
+                <TableCell colSpan={13} align="center" sx={{ py: 4 }}>
                   <CircularProgress size={22} />
                 </TableCell>
               </TableRow>
             ) : linhas.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={12} align="center" sx={{ py: 4 }}>
+                <TableCell colSpan={13} align="center" sx={{ py: 4 }}>
                   <Typography color="text.secondary">
                     Nenhum registro para {nomeMes}/{ano} com este filtro.
                   </Typography>
@@ -373,6 +382,12 @@ export default function ReportsTab() {
                   </TableCell>
                   <TableCell align="right" sx={{ fontFamily: '"IBM Plex Mono", monospace' }}>
                     {formatMoeda(l.extraProprietario)}
+                  </TableCell>
+                  <TableCell
+                    align="right"
+                    sx={{ fontFamily: '"IBM Plex Mono", monospace', fontWeight: 700 }}
+                  >
+                    {formatMoeda(l.valorReceber)}
                   </TableCell>
                   <TableCell
                     align="right"
@@ -429,6 +444,12 @@ export default function ReportsTab() {
                   sx={{ fontFamily: '"IBM Plex Mono", monospace', fontWeight: 700 }}
                 >
                   {formatMoeda(totais.extraProprietario)}
+                </TableCell>
+                <TableCell
+                  align="right"
+                  sx={{ fontFamily: '"IBM Plex Mono", monospace', fontWeight: 700 }}
+                >
+                  {formatMoeda(totais.valorReceber)}
                 </TableCell>
                 <TableCell
                   align="right"

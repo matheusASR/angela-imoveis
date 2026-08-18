@@ -365,6 +365,8 @@ export default function App() {
       await deleteLocacao(confirmDelete.id)
       setLocacoes((prev) => prev.filter((l) => l.id !== confirmDelete.id))
       showSnack('Imóvel excluído.', 'info')
+      setDetalhesOpen(false)
+      setSelected(null)
     } catch (e) {
       showErro(e)
     } finally {
@@ -497,8 +499,8 @@ export default function App() {
 
                 <LocacaoTable
                   locacoes={filtered}
+                  filtro={filtro}
                   onOpen={handleOpen}
-                  onDelete={handleDeleteRequest}
                   onToggleLocatario={handleToggleLocatario}
                   onToggleProprietario={handleToggleProprietario}
                   onToggleReajusteRevisado={handleToggleReajusteRevisado}
@@ -546,6 +548,7 @@ export default function App() {
         locatarios={locatarios}
         onClose={() => setDetalhesOpen(false)}
         onSave={handleSave}
+        onDeleteRequest={handleDeleteRequest}
       />
 
       <Dialog open={!!confirmDelete} onClose={() => setConfirmDelete(null)}>

@@ -7,7 +7,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  IconButton,
   Chip,
   Stack,
   Tooltip,
@@ -16,13 +15,11 @@ import {
   ToggleButton,
   TextField,
 } from '@mui/material'
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import WarningAmberIcon from '@mui/icons-material/WarningAmber'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
-import OpenInNewIcon from '@mui/icons-material/OpenInNew'
 import HomeWorkOutlinedIcon from '@mui/icons-material/HomeWorkOutlined'
-import type { Locacao } from '../types'
+import type { FiltroTipo, Locacao } from '../types'
 import {
   calcularMesContratoAtual,
   contratoPertoDoFim,
@@ -32,9 +29,22 @@ import {
   precisaReajuste,
   reajusteJaRevisado,
   valorAPagarProprietario,
+  valorAReceberLocatario,
   valorParcelaIptu,
 } from '../calc'
 import { brick, moss, amber, rose, soft, inkSecondary } from '../theme'
+
+/** Toggle buttons desta tabela usam um raio bem menor que o padrão (pílula) do tema. */
+const toggleBtnSx = {
+  justifyContent: 'flex-start',
+  textTransform: 'none',
+  px: 1,
+  py: 0.25,
+  fontSize: '0.75rem',
+  borderRadius: '6px !important',
+  '&.Mui-selected': { bgcolor: moss, color: '#fff' },
+  '&.Mui-selected:hover': { bgcolor: moss },
+}
 
 /**
  * Célula de valor monetário editável in-line. Tem fundo e borda sutis
@@ -100,16 +110,16 @@ function EditableMoneyCell({ value, onCommit }: { value: number; onCommit: (v: n
 
 export default function LocacaoTable({
   locacoes,
+  filtro,
   onOpen,
-  onDelete,
   onToggleLocatario,
   onToggleProprietario,
   onToggleReajusteRevisado,
   onUpdateCampo,
 }: {
   locacoes: Locacao[]
+  filtro: FiltroTipo
   onOpen: (l: Locacao) => void
-  onDelete: (l: Locacao) => void
   onToggleLocatario: (l: Locacao) => void
   onToggleProprietario: (l: Locacao) => void
   onToggleReajusteRevisado: (l: Locacao) => void
@@ -143,20 +153,16 @@ export default function LocacaoTable({
     )
   }
 
-  const algumPertoDoFim = locacoes.some(
-    (l) => l.ativo && contratoPertoDoFim(l.data_inicio_contrato, l.meses_contrato),
-  )
+  // "Pendência de pagamento" e "reajuste pendente" são visões enxutas: a
+  // lista já vem filtrada para só esses casos (ver App.tsx), então colunas
+  // de valores editáveis somem e só as colunas relevantes à ação (marcar
+  // pagamento / revisão) aparecem.
+  const filtroPendencia = filtro === 'locatarios_pendentes' || filtro === 'proprietarios_pendentes'
+  const filtroReajuste = filtro === 'reajustes_pendentes'
+  const colunasReduzidas = filtroPendencia || filtroReajuste
 
   return (
     <Stack spacing={1}>
-      {algumPertoDoFim && (
-        <Stack direction="row" spacing={1} alignItems="center">
-          <Box sx={{ width: 12, height: 12, borderRadius: 0.75, bgcolor: rose, flexShrink: 0 }} />
-          <Typography variant="caption" color="text.secondary">
-            Contratos com 3 meses ou menos para o fim
-          </Typography>
-        </Stack>
-      )}
       <TableContainer component={Paper} variant="outlined">
         <Table size="small">
           <TableHead>
@@ -165,17 +171,17 @@ export default function LocacaoTable({
               <TableCell>Locatário</TableCell>
               <TableCell>Proprietário</TableCell>
               <TableCell>Tempo de contrato</TableCell>
-              <TableCell align="right">Aluguel</TableCell>
-              <TableCell align="right">Condomínio</TableCell>
-              <TableCell align="right">IPTU (mensal)</TableCell>
-              <TableCell align="right">Extras locatário</TableCell>
+              {!colunasReduzidas && <TableCell align="right">Aluguel</TableCell>}
+              {!colunasReduzidas && <TableCell align="right">Condomínio</TableCell>}
+              {!colunasReduzidas && <TableCell align="right">IPTU (mensal)</TableCell>}
+              {!colunasReduzidas && <TableCell align="right">Extras locatário</TableCell>}
               <TableCell align="right">Multa</TableCell>
-              <TableCell align="right">Taxa ADM</TableCell>
+              {!colunasReduzidas && <TableCell align="right">Taxa ADM</TableCell>}
               <TableCell align="right">Extras proprietário</TableCell>
+              <TableCell align="right">A receber do locatário</TableCell>
               <TableCell align="right">A pagar ao proprietário</TableCell>
-              <TableCell>Pagamentos</TableCell>
-              <TableCell>Revisão</TableCell>
-              <TableCell align="right"></TableCell>
+              {filtroPendencia && <TableCell>Pagamentos</TableCell>}
+              {filtroReajuste && <TableCell>Revisão</TableCell>}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -194,17 +200,7 @@ export default function LocacaoTable({
               <TableRow
                 key={l.id}
                 hover
-                sx={{
-                  backgroundColor: pertoDoFim
-                    ? 'rgba(192,57,43,0.18)'
-                    : l.predinho === 1
-                      ? 'rgba(166,71,43,0.045)'
-                      : undefined,
-                  borderLeft: pertoDoFim ? `3px solid ${rose}` : '3px solid transparent',
-                  transition: 'background-color 0.12s ease',
-                  '&:hover': { backgroundColor: pertoDoFim ? 'rgba(192,57,43,0.24)' : undefined },
-                  '&:last-child td': { borderBottom: 0 },
-                }}
+                sx={{ '&:last-child td': { borderBottom: 0 } }}
               >
                 <Tooltip title="Clique para ver detalhes do imóvel" placement="top-start" enterDelay={600}>
                   <TableCell sx={{ py: 1.25, ...abrirCellSx }} onClick={() => onOpen(l)}>
@@ -245,42 +241,52 @@ export default function LocacaoTable({
                     }}
                   />
                 </TableCell>
-                <TableCell align="right">
-                  <EditableMoneyCell
-                    value={l.valor_aluguel}
-                    onCommit={(v) => onUpdateCampo(l, 'valor_aluguel', v)}
-                  />
-                </TableCell>
-                <TableCell align="right">
-                  <EditableMoneyCell
-                    value={l.valor_condominio}
-                    onCommit={(v) => onUpdateCampo(l, 'valor_condominio', v)}
-                  />
-                </TableCell>
-                <TableCell align="right">
-                  <EditableMoneyCell
-                    value={valorParcelaIptu(l.valor_iptu)}
-                    onCommit={(v) => onUpdateCampo(l, 'valor_iptu', Math.round(v * 10 * 100) / 100)}
-                  />
-                </TableCell>
-                <TableCell align="right">
-                  <EditableMoneyCell
-                    value={l.valor_extras}
-                    onCommit={(v) => onUpdateCampo(l, 'valor_extras', v)}
-                  />
-                </TableCell>
+                {!colunasReduzidas && (
+                  <TableCell align="right">
+                    <EditableMoneyCell
+                      value={l.valor_aluguel}
+                      onCommit={(v) => onUpdateCampo(l, 'valor_aluguel', v)}
+                    />
+                  </TableCell>
+                )}
+                {!colunasReduzidas && (
+                  <TableCell align="right">
+                    <EditableMoneyCell
+                      value={l.valor_condominio}
+                      onCommit={(v) => onUpdateCampo(l, 'valor_condominio', v)}
+                    />
+                  </TableCell>
+                )}
+                {!colunasReduzidas && (
+                  <TableCell align="right">
+                    <EditableMoneyCell
+                      value={valorParcelaIptu(l.valor_iptu)}
+                      onCommit={(v) => onUpdateCampo(l, 'valor_iptu', Math.round(v * 10 * 100) / 100)}
+                    />
+                  </TableCell>
+                )}
+                {!colunasReduzidas && (
+                  <TableCell align="right">
+                    <EditableMoneyCell
+                      value={l.valor_extras}
+                      onCommit={(v) => onUpdateCampo(l, 'valor_extras', v)}
+                    />
+                  </TableCell>
+                )}
                 <TableCell align="right">
                   <EditableMoneyCell
                     value={l.valor_multa}
                     onCommit={(v) => onUpdateCampo(l, 'valor_multa', v)}
                   />
                 </TableCell>
-                <TableCell align="right">
-                  <EditableMoneyCell
-                    value={l.valor_adm}
-                    onCommit={(v) => onUpdateCampo(l, 'valor_adm', v)}
-                  />
-                </TableCell>
+                {!colunasReduzidas && (
+                  <TableCell align="right">
+                    <EditableMoneyCell
+                      value={l.valor_adm}
+                      onCommit={(v) => onUpdateCampo(l, 'valor_adm', v)}
+                    />
+                  </TableCell>
+                )}
                 <TableCell align="right">
                   <EditableMoneyCell
                     value={l.valor_extra_proprietario}
@@ -292,141 +298,100 @@ export default function LocacaoTable({
                   sx={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: '0.9rem', fontWeight: 700, ...abrirCellSx }}
                   onClick={() => onOpen(l)}
                 >
+                  {formatMoeda(valorAReceberLocatario(l))}
+                </TableCell>
+                <TableCell
+                  align="right"
+                  sx={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: '0.9rem', fontWeight: 700, ...abrirCellSx }}
+                  onClick={() => onOpen(l)}
+                >
                   {formatMoeda(valorAPagarProprietario(l))}
                 </TableCell>
-                <TableCell>
-                  <Stack spacing={0.5}>
-                    <Tooltip
-                      title={
-                        locatarioPagou
-                          ? `Recebido em ${formatData(l.data_pagamento_locatario)}`
-                          : 'Marcar como recebido hoje'
-                      }
-                    >
-                      <ToggleButton
-                        value="locatario"
-                        selected={locatarioPagou}
-                        size="small"
-                        onChange={() => onToggleLocatario(l)}
-                        sx={{
-                          justifyContent: 'flex-start',
-                          textTransform: 'none',
-                          px: 1,
-                          py: 0.25,
-                          fontSize: '0.75rem',
-                          '&.Mui-selected': { bgcolor: moss, color: '#fff' },
-                          '&.Mui-selected:hover': { bgcolor: moss },
-                        }}
-                      >
-                        {locatarioPagou ? (
-                          <CheckCircleIcon fontSize="small" sx={{ mr: 0.5, fontSize: '1rem' }} />
-                        ) : (
-                          <RadioButtonUncheckedIcon fontSize="small" sx={{ mr: 0.5, fontSize: '1rem' }} />
-                        )}
-                        Locatário pagou
-                      </ToggleButton>
-                    </Tooltip>
-                    <Tooltip
-                      title={
-                        proprietarioPago
-                          ? `Pago em ${formatData(l.data_pagamento_proprietario)}`
-                          : 'Marcar como pago hoje'
-                      }
-                    >
-                      <ToggleButton
-                        value="proprietario"
-                        selected={proprietarioPago}
-                        size="small"
-                        onChange={() => onToggleProprietario(l)}
-                        sx={{
-                          justifyContent: 'flex-start',
-                          textTransform: 'none',
-                          px: 1,
-                          py: 0.25,
-                          fontSize: '0.75rem',
-                          '&.Mui-selected': { bgcolor: moss, color: '#fff' },
-                          '&.Mui-selected:hover': { bgcolor: moss },
-                        }}
-                      >
-                        {proprietarioPago ? (
-                          <CheckCircleIcon fontSize="small" sx={{ mr: 0.5, fontSize: '1rem' }} />
-                        ) : (
-                          <RadioButtonUncheckedIcon fontSize="small" sx={{ mr: 0.5, fontSize: '1rem' }} />
-                        )}
-                        Paguei proprietário
-                      </ToggleButton>
-                    </Tooltip>
-                  </Stack>
-                </TableCell>
-                <TableCell>
-                  <Stack spacing={0.5}>
-                    {reajuste && !revisado && (
-                      <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap">
-                        <Tooltip title="Contrato completou 12 meses — verificar reajuste">
-                          <WarningAmberIcon fontSize="small" sx={{ color: amber }} />
-                        </Tooltip>
-                      </Stack>
-                    )}
-                    {reajuste && (
+                {filtroPendencia && (
+                  <TableCell>
+                    <Stack direction="row" spacing={0.75} flexWrap="wrap">
                       <Tooltip
                         title={
-                          revisado
-                            ? 'IPCA/IGP-M já revisado neste ciclo — clique para desmarcar'
-                            : 'Marcar que o reajuste por IPCA/IGP-M já foi revisado'
+                          locatarioPagou
+                            ? `Recebido em ${formatData(l.data_pagamento_locatario)}`
+                            : 'Marcar como recebido hoje'
                         }
                       >
                         <ToggleButton
-                          value="reajuste"
-                          selected={revisado}
+                          value="locatario"
+                          selected={locatarioPagou}
                           size="small"
-                          onChange={() => onToggleReajusteRevisado(l)}
-                          sx={{
-                            justifyContent: 'flex-start',
-                            textTransform: 'none',
-                            px: 1,
-                            py: 0.25,
-                            fontSize: '0.75rem',
-                            '&.Mui-selected': { bgcolor: moss, color: '#fff' },
-                            '&.Mui-selected:hover': { bgcolor: moss },
-                          }}
+                          onChange={() => onToggleLocatario(l)}
+                          sx={toggleBtnSx}
                         >
-                          {revisado ? (
+                          {locatarioPagou ? (
                             <CheckCircleIcon fontSize="small" sx={{ mr: 0.5, fontSize: '1rem' }} />
                           ) : (
                             <RadioButtonUncheckedIcon fontSize="small" sx={{ mr: 0.5, fontSize: '1rem' }} />
                           )}
-                          IPCA/IGP-M revisado
+                          Locatário pagou
                         </ToggleButton>
                       </Tooltip>
-                    )}
-                  </Stack>
-                </TableCell>
-                <TableCell align="right">
-                  <Stack direction="row" spacing={0.25} justifyContent="flex-end">
-                    <Tooltip title="Ver detalhes do imóvel">
-                      <IconButton
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onOpen(l)
-                        }}
+                      <Tooltip
+                        title={
+                          proprietarioPago
+                            ? `Pago em ${formatData(l.data_pagamento_proprietario)}`
+                            : 'Marcar como pago hoje'
+                        }
                       >
-                        <OpenInNewIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Excluir imóvel">
-                      <IconButton
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onDelete(l)
-                        }}
-                      >
-                        <DeleteOutlineIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  </Stack>
-                </TableCell>
+                        <ToggleButton
+                          value="proprietario"
+                          selected={proprietarioPago}
+                          size="small"
+                          onChange={() => onToggleProprietario(l)}
+                          sx={toggleBtnSx}
+                        >
+                          {proprietarioPago ? (
+                            <CheckCircleIcon fontSize="small" sx={{ mr: 0.5, fontSize: '1rem' }} />
+                          ) : (
+                            <RadioButtonUncheckedIcon fontSize="small" sx={{ mr: 0.5, fontSize: '1rem' }} />
+                          )}
+                          Paguei proprietário
+                        </ToggleButton>
+                      </Tooltip>
+                    </Stack>
+                  </TableCell>
+                )}
+                {filtroReajuste && (
+                  <TableCell>
+                    <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap">
+                      {reajuste && !revisado && (
+                        <Tooltip title="Contrato completou 12 meses — verificar reajuste">
+                          <WarningAmberIcon fontSize="small" sx={{ color: amber }} />
+                        </Tooltip>
+                      )}
+                      {reajuste && (
+                        <Tooltip
+                          title={
+                            revisado
+                              ? 'IPCA/IGP-M já revisado neste ciclo — clique para desmarcar'
+                              : 'Marcar que o reajuste por IPCA/IGP-M já foi revisado'
+                          }
+                        >
+                          <ToggleButton
+                            value="reajuste"
+                            selected={revisado}
+                            size="small"
+                            onChange={() => onToggleReajusteRevisado(l)}
+                            sx={toggleBtnSx}
+                          >
+                            {revisado ? (
+                              <CheckCircleIcon fontSize="small" sx={{ mr: 0.5, fontSize: '1rem' }} />
+                            ) : (
+                              <RadioButtonUncheckedIcon fontSize="small" sx={{ mr: 0.5, fontSize: '1rem' }} />
+                            )}
+                            IPCA/IGP-M revisado
+                          </ToggleButton>
+                        </Tooltip>
+                      )}
+                    </Stack>
+                  </TableCell>
+                )}
               </TableRow>
             )
           })}

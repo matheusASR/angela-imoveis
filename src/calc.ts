@@ -209,6 +209,21 @@ export function valorAPagarProprietario(l: Locacao): number {
   )
 }
 
+/**
+ * Valor a ser recebido do locatário: Aluguel + Condomínio + IPTU (parcela
+ * do mês) + Benefícios do Locatário (Extras) + Multa (se houver) — mesma
+ * base de `valorAPagarProprietario`, mas sem descontar a Taxa ADM nem o
+ * Extra do Proprietário (que ficam retidos pela administradora).
+ */
+export function valorAReceberLocatario(l: Locacao): number {
+  const aluguel = Number(l.valor_aluguel) || 0
+  const condominio = l.pagamento_condominio === 'adm' ? Number(l.valor_condominio) || 0 : 0
+  const iptu = l.pagamento_iptu === 'adm' ? valorParcelaIptu(l.valor_iptu) : 0
+  const extras = l.pagamento_extras === 'adm' ? Number(l.valor_extras) || 0 : 0
+  const multa = Number(l.valor_multa) || 0
+  return Math.round((aluguel + condominio + iptu + extras + multa) * 100) / 100
+}
+
 export function formatFormaPagamento(f: FormaPagamento): string {
   return f === 'locatario' ? 'Direto pelo locatário' : 'Pela ADM'
 }
