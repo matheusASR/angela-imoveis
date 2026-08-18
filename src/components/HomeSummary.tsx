@@ -177,7 +177,7 @@ export default function HomeSummary({
 
         <StatItem
           icon={<PendingActionsOutlinedIcon fontSize="small" />}
-          label="Locatário sem pagar"
+          label="Locatários sem pagar"
           value={locatariosPendentes}
           accent={amber}
           active={filtro === 'locatarios_pendentes'}

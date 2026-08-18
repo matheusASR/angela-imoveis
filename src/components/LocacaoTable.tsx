@@ -34,16 +34,23 @@ import {
 } from '../calc'
 import { brick, moss, amber, rose, soft, inkSecondary } from '../theme'
 
-/** Toggle buttons desta tabela usam um raio bem menor que o padrão (pílula) do tema. */
+/**
+ * Toggle buttons desta tabela usam um raio bem menor que o padrão (pílula)
+ * do tema, e mantêm uma borda visível — sem ela, no raio pequeno, o botão
+ * fica fácil de confundir com texto solto (não parece clicável).
+ */
 const toggleBtnSx = {
   justifyContent: 'flex-start',
   textTransform: 'none',
+  whiteSpace: 'nowrap',
   px: 1,
   py: 0.25,
   fontSize: '0.75rem',
   borderRadius: '6px !important',
-  '&.Mui-selected': { bgcolor: moss, color: '#fff' },
-  '&.Mui-selected:hover': { bgcolor: moss },
+  border: '1px solid',
+  borderColor: 'divider',
+  '&.Mui-selected': { bgcolor: moss, color: '#fff', borderColor: moss },
+  '&.Mui-selected:hover': { bgcolor: moss, borderColor: moss },
 }
 
 /**
@@ -175,13 +182,13 @@ export default function LocacaoTable({
               {!colunasReduzidas && <TableCell align="right">Condomínio</TableCell>}
               {!colunasReduzidas && <TableCell align="right">IPTU (mensal)</TableCell>}
               {!colunasReduzidas && <TableCell align="right">Extras locatário</TableCell>}
-              <TableCell align="right">Multa</TableCell>
+              {!colunasReduzidas && <TableCell align="right">Multa</TableCell>}
               {!colunasReduzidas && <TableCell align="right">Taxa ADM</TableCell>}
-              <TableCell align="right">Extras proprietário</TableCell>
+              {!colunasReduzidas && <TableCell align="right">Extras proprietário</TableCell>}
               <TableCell align="right">A receber do locatário</TableCell>
               <TableCell align="right">A pagar ao proprietário</TableCell>
-              {filtroPendencia && <TableCell>Pagamentos</TableCell>}
-              {filtroReajuste && <TableCell>Revisão</TableCell>}
+              {filtroPendencia && <TableCell sx={{ whiteSpace: 'nowrap' }}>Pagamentos</TableCell>}
+              {filtroReajuste && <TableCell sx={{ whiteSpace: 'nowrap' }}>Revisão</TableCell>}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -273,12 +280,14 @@ export default function LocacaoTable({
                     />
                   </TableCell>
                 )}
-                <TableCell align="right">
-                  <EditableMoneyCell
-                    value={l.valor_multa}
-                    onCommit={(v) => onUpdateCampo(l, 'valor_multa', v)}
-                  />
-                </TableCell>
+                {!colunasReduzidas && (
+                  <TableCell align="right">
+                    <EditableMoneyCell
+                      value={l.valor_multa}
+                      onCommit={(v) => onUpdateCampo(l, 'valor_multa', v)}
+                    />
+                  </TableCell>
+                )}
                 {!colunasReduzidas && (
                   <TableCell align="right">
                     <EditableMoneyCell
@@ -287,12 +296,14 @@ export default function LocacaoTable({
                     />
                   </TableCell>
                 )}
-                <TableCell align="right">
-                  <EditableMoneyCell
-                    value={l.valor_extra_proprietario}
-                    onCommit={(v) => onUpdateCampo(l, 'valor_extra_proprietario', v)}
-                  />
-                </TableCell>
+                {!colunasReduzidas && (
+                  <TableCell align="right">
+                    <EditableMoneyCell
+                      value={l.valor_extra_proprietario}
+                      onCommit={(v) => onUpdateCampo(l, 'valor_extra_proprietario', v)}
+                    />
+                  </TableCell>
+                )}
                 <TableCell
                   align="right"
                   sx={{ fontFamily: '"IBM Plex Mono", monospace', fontSize: '0.9rem', fontWeight: 700, ...abrirCellSx }}
@@ -308,8 +319,8 @@ export default function LocacaoTable({
                   {formatMoeda(valorAPagarProprietario(l))}
                 </TableCell>
                 {filtroPendencia && (
-                  <TableCell>
-                    <Stack direction="row" spacing={0.75} flexWrap="wrap">
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                    <Stack direction="row" spacing={0.75}>
                       <Tooltip
                         title={
                           locatarioPagou
@@ -358,8 +369,8 @@ export default function LocacaoTable({
                   </TableCell>
                 )}
                 {filtroReajuste && (
-                  <TableCell>
-                    <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap">
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                    <Stack direction="row" spacing={0.75} alignItems="center">
                       {reajuste && !revisado && (
                         <Tooltip title="Contrato completou 12 meses — verificar reajuste">
                           <WarningAmberIcon fontSize="small" sx={{ color: amber }} />
